@@ -3,7 +3,7 @@ const { ServiceBroker } = require("moleculer");
 // Create a broker
 const broker = new ServiceBroker(
     {
-        nodeID: "node-1",
+        nodeID: "integration-1",
         transporter: "nats://localhost:4222",
     }
 );

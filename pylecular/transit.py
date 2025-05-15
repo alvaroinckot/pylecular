@@ -1,5 +1,6 @@
 
 from pylecular.context import Context
+from pylecular.node import Node
 from pylecular.transporter.base import Transporter
 from pylecular.packets import Packet,Packets
 from pylecular.transporter.base import Transporter
@@ -78,7 +79,11 @@ class Transit:
         pass
 
     async def info_handler(self, packet: Packet):
-        self.node_catalog.add_node(packet.target, packet.payload)
+        node = Node(
+            id=packet.payload.get("id"),
+            **packet.payload
+        )
+        self.node_catalog.add_node(packet.target, node)
 
     async def disconnect_handler(self, packet: Packet):
         # print(f"Handling disconnect: {packet}")

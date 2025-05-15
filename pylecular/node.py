@@ -2,13 +2,21 @@
 import sys
 
 class Node:
-    def __init__(self, id):
+    def __init__(self, id, available=True, local=False, services=None, cpu=0, client=None, ipList=None, hostname=None, config=None, instanceID=None, metadata=None, seq=0, ver=0, sender=None):
         self.id = id
-        self.available = True
-        self.local = False
-        self.services = []
-        self.cpu = 0
-        self.client = None
+        self.available = available
+        self.local = local
+        self.services = services if services is not None else []
+        self.cpu = cpu
+        self.client = client
+        self.ipList = ipList if ipList is not None else []
+        self.hostname = hostname
+        self.config = config if config is not None else {}
+        self.instanceID = instanceID
+        self.metadata = metadata if metadata is not None else {}
+        self.seq = seq
+        self.ver = ver
+        self.sender = sender
 
 
 class NodeCatalog:
@@ -21,8 +29,14 @@ class NodeCatalog:
         self.ensure_local_node()
 
 
-    def add_node(self, id, node):
+    def add_node(self, id, node: Node):
         self.nodes[id] = node
+        if self.registry and hasattr(node, "services"):
+            for service in node.services:
+                actions = service.get("actions", {})
+                for action_name in actions:
+                    self.registry.add_action(action_name, id)
+        self.logger.info(f"Node \"{id}\" added.")
 
     def get_node(self, id):
         return self.nodes.get(id)
@@ -60,6 +74,7 @@ class NodeCatalog:
             "langVersion": sys.version,
             # "version": version,
         }
+        # TODO: local_node.services is essentialy different from the class Service
         self.local_node.services = [
                 {
                     "name": service.name,
@@ -81,5 +96,5 @@ class NodeCatalog:
                         for event in service.events()
                     }
                 } 
-                for service in self.registry.services.values()
+                for service in self.registry.__services__.values() 
             ]

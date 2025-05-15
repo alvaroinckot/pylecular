@@ -18,7 +18,7 @@ class Broker:
             service="BROKER",
         )
         self.registry = Registry(node_id=self.id, logger=self.logger)
-        self.node_catalog = NodeCatalog(logger=self.logger, node_id=self.id, registry=self.registry)
+        self.node_catalog: NodeCatalog = NodeCatalog(logger=self.logger, node_id=self.id, registry=self.registry)
         self.transit = Transit(node_id=self.id, registry=self.registry, node_catalog=self.node_catalog)
         self.discoverer = Discoverer(broker=self)
 
@@ -29,7 +29,7 @@ class Broker:
         self.logger.info(f"Node ID: {self.id}.")
         self.logger.info(f"Transporter: {self.transit.transporter.name}.")
         await self.transit.connect()
-        self.logger.info(f"✔ Service broker with {len(self.registry.services)} services started.")
+        self.logger.info(f"✔ Service broker with {len(self.registry.__services__)} services started.")
 
 
     async def stop(self):
@@ -49,12 +49,35 @@ class Broker:
         await shutdown_event.wait()
         await self.stop()
 
+    async def wait_for_services(self, services=[]):
+        while True:
+            found = True
+            for name in services:
+                service = self.registry.get_service(name)
+                if not service:
+                    # check in remote nodes
+                    for node in self.node_catalog.nodes.values():
+                        if node.id != self.id:
+                            for service_obj in node.services:
+                                if service_obj.get("name") == name:
+                                    service = service_obj
+                                    break
+                if not service:
+                    found = False
+                    break
+            if found:
+                return
+            await asyncio.sleep(0.1)
+
+
+    # TODO: fix service lyfecicle handling on catalog
+    # TODO: if service is alive send INFO
     def register(self, service):
         self.registry.register(service)
         self.node_catalog.ensure_local_node()
-        # TODO: fix service lyfecicle handling on catalog
-        # TODO: if service is alive send INFO
 
+    # TODO: support balancing strategies
+    # TODO: support unbalanced
     async def call(self, action_name, params):
         endpoint = self.registry.get_action(action_name)
         if endpoint and endpoint.is_local:
@@ -62,7 +85,8 @@ class Broker:
             return await endpoint.handler(ctx)
         elif endpoint and not endpoint.is_local:
             ctx = Context.build(params=params)
-            self.transit.publish(Packet(Packets.REQUEST, endpoint.node_id, {
+            self.logger.info(f"Requesting remote {endpoint.node_id}")
+            await self.transit.publish(Packet(Packets.REQUEST, endpoint.node_id, {
                 "action": action_name,
                 "params": params
             }))
