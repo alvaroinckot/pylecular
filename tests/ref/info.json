@@ -1,0 +1,231 @@
+{
+    "services": [
+        {
+            "name": "$node",
+            "fullName": "$node",
+            "settings": {},
+            "metadata": {},
+            "actions": {
+                "$node.list": {
+                    "cache": false,
+                    "tracing": false,
+                    "params": {
+                        "withServices": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        },
+                        "onlyAvailable": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        }
+                    },
+                    "rawName": "list",
+                    "name": "$node.list"
+                },
+                "$node.services": {
+                    "cache": false,
+                    "tracing": false,
+                    "params": {
+                        "onlyLocal": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        },
+                        "skipInternal": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        },
+                        "withActions": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        },
+                        "withEvents": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        },
+                        "onlyAvailable": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        },
+                        "grouping": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": true
+                        }
+                    },
+                    "rawName": "services",
+                    "name": "$node.services"
+                },
+                "$node.actions": {
+                    "cache": false,
+                    "tracing": false,
+                    "params": {
+                        "onlyLocal": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        },
+                        "skipInternal": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        },
+                        "withEndpoints": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        },
+                        "onlyAvailable": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        }
+                    },
+                    "rawName": "actions",
+                    "name": "$node.actions"
+                },
+                "$node.events": {
+                    "cache": false,
+                    "tracing": false,
+                    "params": {
+                        "onlyLocal": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        },
+                        "skipInternal": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        },
+                        "withEndpoints": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        },
+                        "onlyAvailable": {
+                            "type": "boolean",
+                            "optional": true,
+                            "convert": true,
+                            "default": false
+                        }
+                    },
+                    "rawName": "events",
+                    "name": "$node.events"
+                },
+                "$node.health": {
+                    "cache": false,
+                    "tracing": false,
+                    "rawName": "health",
+                    "name": "$node.health"
+                },
+                "$node.options": {
+                    "cache": false,
+                    "tracing": false,
+                    "params": {},
+                    "rawName": "options",
+                    "name": "$node.options"
+                },
+                "$node.metrics": {
+                    "cache": false,
+                    "tracing": false,
+                    "params": {
+                        "types": {
+                            "type": "multi",
+                            "optional": true,
+                            "rules": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": "string"
+                                }
+                            ]
+                        },
+                        "includes": {
+                            "type": "multi",
+                            "optional": true,
+                            "rules": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": "string"
+                                }
+                            ]
+                        },
+                        "excludes": { 
+                            "type": "multi",
+                            "optional": true,
+                            "rules": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "rawName": "metrics",
+                    "name": "$node.metrics"
+                }
+            },
+            "events": {}
+        },
+        {
+            "name": "math",
+            "fullName": "math",
+            "settings": {},
+            "metadata": {},
+            "actions": {
+                "math.add": {
+                    "rawName": "add",
+                    "name": "math.add"
+                }
+            },
+            "events": {}
+        }
+    ],
+    "ipList": [
+        "192.168.1.187",
+        "172.19.0.1",
+        "172.20.0.1"
+    ],
+    "hostname": "alvaro-PC",
+    "client": {
+        "type": "nodejs",
+        "version": "0.14.35",
+        "langVersion": "v22.15.0"
+    },
+    "config": {},
+    "instanceID": "5929386d-4bb1-4e86-9ce0-0fe5de70a90c",
+    "metadata": {},
+    "seq": 2,
+    "ver": "4",
+    "sender": "node-1"
+}
