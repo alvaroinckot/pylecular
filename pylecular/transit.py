@@ -8,21 +8,23 @@ import psutil
 
 class Transit:
     # TODO move config to a config file
-    def __init__(self, broker, config={
+    def __init__(self, node_id=None, registry=None, node_catalog=None, config={
             "type": "nats",
             "connection": "nats://localhost:4222"
         }):
-        self.broker = broker
-        self.transporter = Transporter.get_by_name(config["type"], config, transit=self, handler=self.__message_handler__)
+        self.node_id = node_id
+        self.registry = registry
+        self.node_catalog = node_catalog
+        self.transporter = Transporter.get_by_name(config["type"], config, transit=self, handler=self.__message_handler__, node_id=node_id)
 
 
     async def __message_handler__(self, packet: Packet):
         if packet.type == Packets.INFO:
-            pass # TODO: handle info packet
+            await self.info_handler(packet)
         elif packet.type == Packets.DISCOVER:
-            pass # TODO: handle discover packet
+            await self.discover_handler(packet)
         elif packet.type == Packets.HEARTBEAT:
-            pass # TODO: handle heartbeat packet
+            await self.heartbeat_handler(packet)
         elif packet.type == Packets.REQUEST:
             await self.request_handler(packet)
         elif packet.type == Packets.RESPONSE:
@@ -31,10 +33,10 @@ class Transit:
 
     async def __make_subscriptions__(self):
         await self.transporter.subscribe(Packets.INFO.value)
-        await self.transporter.subscribe(Packets.INFO.value, self.broker.id)
+        await self.transporter.subscribe(Packets.INFO.value, self.node_id)
         await self.transporter.subscribe(Packets.HEARTBEAT.value)
-        await self.transporter.subscribe(Packets.REQUEST.value, self.broker.id)
-        await self.transporter.subscribe(Packets.RESPONSE.value, self.broker.id)
+        await self.transporter.subscribe(Packets.REQUEST.value, self.node_id)
+        await self.transporter.subscribe(Packets.RESPONSE.value, self.node_id)
 
 
     async def connect(self):
@@ -53,51 +55,41 @@ class Transit:
 
 
     async def discover(self):
-        await self.publish(Packet(Packets.DISCOVER, None, {})) # TODO: listen for response
+        await self.publish(Packet(Packets.DISCOVER, None, {}))
 
 
     async def beat(self):
         heartbeat = { # TODO: move to node catalog
             "cpu": psutil.cpu_percent(interval=1),
+
         }
         await self.publish(Packet(Packets.HEARTBEAT, None, heartbeat))
 
     async def send_node_info(self):
-        # TODO: move to node catalog
-        node_info = {
-            "id": self.broker.id,
-            "services": [
-                {
-                    "name": service.name,
-                    "fullName": service.name,
-                    "settings": service.settings,
-                    "metadata": service.metadata,
-                    "actions": {
-                        f"{service.name}.{action}": {
-                            "rawName": action,
-                            "name": f"{service.name}.{action}"
-                        }
-                        for action in service.actions()
-                    },
-                    "events": {
-                        f"{service.name}.{event}": {
-                            "rawName": event,
-                            "name": f"{service.name}.{event}"
-                        }
-                        for event in service.events()
-                    }
-                } 
-                for service in self.broker.registry.services.values()
-            ]
-        }
-        await self.publish(Packet(Packets.INFO, None, node_info))
+        await self.publish(Packet(Packets.INFO, None, self.node_catalog.local_node.__dict__))
 
+
+    async def discover_handler(self, packet: Packet):
+        await self.send_node_info()
+
+    async def heartbeat_handler(self, packet: Packet):
+        # print(f"Handling heartbeat: {packet}")
+        # Implement heartbeat handling logic here
+        pass
+
+    async def info_handler(self, packet: Packet):
+        self.node_catalog.add_node(packet.target, packet.payload)
+
+    async def disconnect_handler(self, packet: Packet):
+        # print(f"Handling disconnect: {packet}")
+        # Implement disconnect handling logic here
+        pass
 
     async def request_handler(self, packet: Packet):
-        ctx = Context(id=packet.payload.get("id"), params=packet.payload.get("params"), meta=packet.payload.get("meta"))
-        endpoint = self.broker.registry.get_action(packet.payload.get("action"))
-        if endpoint:
-            result = endpoint(ctx) # TODO: try catch result
+        endpoint = self.registry.get_action(packet.payload.get("action"))
+        if endpoint and endpoint.is_local:
+            ctx = Context(id=packet.payload.get("id"), params=packet.payload.get("params"), meta=packet.payload.get("meta"))
+            result = await endpoint.handler(ctx) # TODO: try catch result
             response = {
                 "id": ctx.id,
                 "data": result,
@@ -114,9 +106,7 @@ class Transit:
         pass
 
     async def request(self, request):
-        # print(f"Requesting: {request}")
-        # Implement request logic here
-        pass
+        await self.publish(Packet(Packets.REQUEST, None, request.payload))
 
     async def sendEvent(self, event):
         # print(f"Sending event: {event}")

@@ -7,5 +7,5 @@ class Context:
         self.meta = meta
 
     @staticmethod
-    def build():
-        return Context(str(uuid.uuid4()))
+    def build(params):
+        return Context(str(uuid.uuid4()), params=params, meta={})

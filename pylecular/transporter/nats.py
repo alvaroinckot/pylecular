@@ -6,18 +6,19 @@ import json
 class NatsTransporter(Transporter):
     name = "nats"
 
-    def __init__(self, connection_string, transit, handler=None):
+    def __init__(self, connection_string, transit, handler=None, node_id=None):
         super().__init__(self.name)
         self.connection_string = connection_string
         self.transit = transit
         self.handler = handler
+        self.node_id = node_id
         self.nc = None
 
     # TODO: maybe move it to base class
     # TODO: user real world serializer
     def _serialize(self, payload): 
         payload["ver"] = "4"
-        payload["sender"] = self.transit.broker.id
+        payload["sender"] = self.node_id
         return json.dumps(payload).encode('utf-8')
     
     def get_topic_name(self, command, node_id=None):
@@ -55,5 +56,5 @@ class NatsTransporter(Transporter):
         await self.nc.subscribe(topic, cb=self.message_handler)
     
     @classmethod
-    def from_config(cls, config, transit, handler=None) -> "Transporter":
-        return cls(connection_string=config["connection"], transit=transit, handler=handler)
+    def from_config(cls, config, transit, handler=None, node_id=None) -> "Transporter":
+        return cls(connection_string=config["connection"], transit=transit, handler=handler, node_id=node_id)

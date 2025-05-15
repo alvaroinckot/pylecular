@@ -23,16 +23,16 @@ class Transporter(ABC):
         pass
 
     @classmethod
-    def get_by_name(cls, name: str, config: dict, transit, handler=None) -> "Transporter":
+    def get_by_name(cls, name: str, config: dict, transit, handler=None, node_id=None) -> "Transporter":
         importlib.import_module("pylecular.transporter.nats")  # import all possible implementations here
 
         for subclass in cls.__subclasses__():
             if subclass.__name__.lower().startswith(name.lower()):
-                return subclass.from_config(config, transit, handler)
+                return subclass.from_config(config, transit, handler, node_id)
         raise ValueError(f"No transporter found for: {name}")
 
     @classmethod
     @abstractmethod
-    def from_config(cls, config: dict, transit, handler=None) -> "Transporter":
+    def from_config(cls, config: dict, transit, handler=None, node_id=None) -> "Transporter":
         pass
 

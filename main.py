@@ -11,7 +11,7 @@ class MySyservice(Service):
 
     # TODO: add validation
     @action(params=["param1", "param2"])
-    def foo(self, ctx: Context):
+    async def foo(self, ctx: Context):
         # print(f"Service {self.name} called with context {ctx.id} and params {ctx.params}")
         return  "100"
 
@@ -27,7 +27,13 @@ async def main():
 
     await broker.start()
 
-    await broker.call("myService.foo", {"param1": "aaaa"})
+    res = await broker.call("myService.foo", {"param1": "aaaa"})
+
+    broker.logger.info(f"local res is {res}")
+
+    mathRes = await broker.call("math.add", {"a": 1, "b": 50 })
+
+    broker.logger.info(f"math res is {mathRes}")
 
     await broker.wait_for_shutdown()
 
