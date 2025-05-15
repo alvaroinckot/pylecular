@@ -9,3 +9,11 @@ class Context:
     @staticmethod
     def build(params):
         return Context(str(uuid.uuid4()), params=params, meta={})
+    
+    # TODO: implement call
+    def call():
+        pass
+
+    # TODO: implement emit
+    def emit():
+        pass

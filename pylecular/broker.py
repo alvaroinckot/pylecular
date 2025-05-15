@@ -90,6 +90,7 @@ class Broker:
                 "action": action_name,
                 "params": params
             }))
+            # TODO: wait and process response
         else:
             raise Exception(f"Action {action_name} not found.")
         
