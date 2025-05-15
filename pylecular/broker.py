@@ -1,10 +1,10 @@
 import asyncio
 import signal
-from moleculer.context import Context
-from moleculer.discoverer import Discoverer
-from moleculer.packets import Packet, Packets
-from moleculer.registry import Registry 
-from moleculer.transit import Transit
+from pylecular.context import Context
+from pylecular.discoverer import Discoverer
+from pylecular.packets import Packet, Packets
+from pylecular.registry import Registry 
+from pylecular.transit import Transit
 
 class Broker:
     def __init__(self, id):

@@ -1,7 +1,7 @@
-from moleculer.context import Context
-from moleculer.service import Service
-from moleculer.decorators import action
-from moleculer.broker import Broker
+from pylecular.context import Context
+from pylecular.service import Service
+from pylecular.decorators import action
+from pylecular.broker import Broker
     
 class MySyservice(Service):
     name = "myService"

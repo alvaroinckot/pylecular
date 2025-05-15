@@ -1,5 +1,5 @@
 from .base import Transporter
-from moleculer.packets import Packet, Packets
+from pylecular.packets import Packet, Packets
 import nats
 import json
 

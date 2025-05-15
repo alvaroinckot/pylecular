@@ -1,8 +1,8 @@
 
-from moleculer.context import Context
-from moleculer.transporter.base import Transporter
-from moleculer.packets import Packet,Packets
-from moleculer.transporter.base import Transporter
+from pylecular.context import Context
+from pylecular.transporter.base import Transporter
+from pylecular.packets import Packet,Packets
+from pylecular.transporter.base import Transporter
 import psutil
 
 

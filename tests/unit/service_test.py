@@ -1,6 +1,6 @@
 import pytest
-from moleculer.service import Service
-from moleculer.decorators import action, event
+from pylecular.service import Service
+from pylecular.decorators import action, event
 
 
 class MyService(Service):

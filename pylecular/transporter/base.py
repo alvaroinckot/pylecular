@@ -20,7 +20,7 @@ class Transporter(ABC):
 
     @classmethod
     def get_by_name(cls, name: str, config: dict, transit, handler=None) -> "Transporter":
-        importlib.import_module("moleculer.transporter.nats")  # import all possible implementations here
+        importlib.import_module("pylecular.transporter.nats")  # import all possible implementations here
 
         for subclass in cls.__subclasses__():
             if subclass.__name__.lower().startswith(name.lower()):
