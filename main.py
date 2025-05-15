@@ -12,7 +12,7 @@ class MySyservice(Service):
     # TODO: add validation
     @action(params=["param1", "param2"])
     def foo(self, ctx: Context):
-        print(f"Service {self.name} called with context {ctx.id} and params {ctx.params}")
+        # print(f"Service {self.name} called with context {ctx.id} and params {ctx.params}")
         return  "100"
 
 # Example usage

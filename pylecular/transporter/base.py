@@ -11,6 +11,10 @@ class Transporter(ABC):
         pass
 
     @abstractmethod
+    async def disconnect(self):
+        pass
+
+    @abstractmethod
     async def publish(self):
         pass
 

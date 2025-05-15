@@ -46,7 +46,7 @@ class Transit:
         
     async def disconnect(self):
         await self.publish(Packet(Packets.DISCONNECT, None, {}))
-        self.transporter.disconnect()
+        await self.transporter.disconnect()
 
     async def publish(self, packet: Packet):
         await self.transporter.publish(packet)
@@ -105,8 +105,8 @@ class Transit:
                 "meta": {}
             }
             await self.publish(Packet(Packets.RESPONSE, packet.target, response))
-        else:
-            print(f"Service {packet.payload.get("action")} not found")
+        # else:
+        #     print(f"Service {packet.payload.get("action")} not found")
 
     async def response_handler(self, response):
         # print(f"Handling response: {response}")

@@ -39,14 +39,15 @@ class NatsTransporter(Transporter):
         await self.nc.publish(topic, self._serialize(packet.payload))
 
     async def connect(self):
-        print(f"Connecting to NATS with name {self.name}")
-        # Implement NATS connection logic here
         self.nc = await nats.connect(self.connection_string)
 
+    async def disconnect(self):
+        if self.nc:
+            await self.nc.close()
+            self.nc = None
 
     async def subscribe(self, command, node_id=None):
         topic = self.get_topic_name(command, node_id)
-        print(f"Subscribing to topic: {topic}")
         if self.handler is None:
             raise ValueError("Handler must be provided for subscription.")
         if not callable(self.message_handler) or not hasattr(self.message_handler, "__call__") or not hasattr(self.message_handler, "__code__") or not self.message_handler.__code__.co_flags & 0x80:
