@@ -5,19 +5,33 @@ from pylecular.discoverer import Discoverer
 from pylecular.packets import Packet, Packets
 from pylecular.registry import Registry 
 from pylecular.transit import Transit
+from pylecular.logger import structlog
 
 class Broker:
     def __init__(self, id):
         self.id = id
+        self.version = "0.1.0"
+        self.namespace = "default"
         self.registry = Registry()
         self.transit = Transit(broker=self)
         self.discoverer = Discoverer(broker=self)
+        self.logger = structlog.get_logger().bind(
+            node=self.id,
+            service="BROKER",
+        )
 
 
     async def start(self):
+        self.logger.info(f"Moleculer v{self.version} is starting...")
+        self.logger.info(f"Namespace: {self.namespace}")
+        self.logger.info(f"Node ID: {self.id}")
+        self.logger.info(f"Transporter: {self.transit.transporter.name}")
         await self.transit.connect()
+        self.logger.info(f"✔ Service broker with {len(self.registry.services)} services started")
+
 
     async def stop(self):
+        self.logger.info("Stopping broker")
         await self.transit.disconnect()
 
     async def wait_for_shutdown(self):

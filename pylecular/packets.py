@@ -19,8 +19,5 @@ class Packet:
 
     @staticmethod
     def from_topic(topic: string):
-        """
-        Converts a topic string to a Packet object.
-        """
         parts = topic.split(".")
         return Packets(parts[1]) # TODO: ensure and test
