@@ -90,9 +90,12 @@ class Broker:
             raise Exception(f"Action {action_name} not found.")
         
 
-    async def emit(self, event_name, *args): # TODO: emit with transit 
+    async def emit(self, event_name, params): # TODO: emit with transit 
         endpoint = self.registry.get_event(event_name)
-        if endpoint:
-            ctx = Context.build()
-            endpoint(ctx, *args) # emit vs broadcast to all nodes logic
-        
+        context = self.lifecycle.create_context(event=event_name, params=params)
+        if endpoint and endpoint.is_local:
+            return await endpoint.handler(context)
+        elif endpoint and not endpoint.is_local:
+            return await self.transit.send_event(endpoint, context)
+        else:
+            raise Exception(f"Action {event_name} not found.")

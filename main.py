@@ -1,6 +1,6 @@
 from pylecular.context import Context
 from pylecular.service import Service
-from pylecular.decorators import action
+from pylecular.decorators import action, event
 from pylecular.broker import Broker
     
 class MySyservice(Service):
@@ -20,6 +20,10 @@ class MySyservice(Service):
         a = await ctx.call("myService.foo", {}) # internal context call
         res = await ctx.call("math.add", { "a": a, "b": 50 }) # remote service call
         return res
+    
+    @event()
+    async def checked(self, ctx: Context):
+        print("checked called")
     
 # Example usage
 import asyncio
@@ -50,6 +54,8 @@ async def main():
     barREs = await broker.call("myService.bar", {})
 
     broker.logger.info(f"bar res is {barREs}")
+
+    await broker.emit("checked", {})
 
     await broker.wait_for_shutdown()
 

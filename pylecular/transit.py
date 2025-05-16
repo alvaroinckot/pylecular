@@ -32,7 +32,8 @@ class Transit:
             await self.request_handler(packet)
         elif packet.type == Packets.RESPONSE:
             await self.response_handler(packet)
-
+        elif packet.type == Packets.EVENT:
+            await self.event_handler(packet)
 
     async def __make_subscriptions__(self):
         await self.transporter.subscribe(Packets.INFO.value)
@@ -40,6 +41,7 @@ class Transit:
         await self.transporter.subscribe(Packets.HEARTBEAT.value)
         await self.transporter.subscribe(Packets.REQUEST.value, self.node_id)
         await self.transporter.subscribe(Packets.RESPONSE.value, self.node_id)
+        await self.transporter.subscribe(Packets.EVENT.value, self.node_id)
 
 
     async def connect(self):
@@ -96,6 +98,15 @@ class Transit:
         # Implement disconnect handling logic here
         pass
 
+    async def event_handler(self,packet: Packet):
+        endpoint = self.registry.get_event(packet.payload.get("event"))
+        if endpoint and endpoint.is_local:
+            context = self.lifecycle.rebuild_context(packet.payload)
+            try:
+                await endpoint.handler(context)
+            except Exception as e:
+                self.logger.error(f"Failed to process event {endpoint.name}.", e)
+
     async def request_handler(self, packet: Packet):
         endpoint = self.registry.get_action(packet.payload.get("action"))
         if endpoint and endpoint.is_local:
@@ -132,8 +143,7 @@ class Transit:
             return None
         
 
-    async def send_event(self, event):
-        # print(f"Sending event: {event}")
-        # Implement event sending logic here
-        pass
+    async def send_event(self, endpoint, context):
+        await self.publish(Packet(Packets.EVENT, endpoint.node_id, context.marshall()))
+
 

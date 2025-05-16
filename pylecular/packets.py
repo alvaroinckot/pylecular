@@ -3,6 +3,7 @@ import string
 
 class Packets(Enum):
     HEARTBEAT = "HEARTBEAT"
+    EVENT = "EVENT"
     DISCONNECT = "DISCONNECT"
     DISCOVER = "DISCOVER"
     INFO = "INFO"

@@ -8,10 +8,11 @@ class Lifecycle:
     def __init__(self, broker):
         self.broker = broker
 
-    def create_context(self, id=uuid.uuid4(), action=None, parent_id=None, params={}, meta={}, stream=False):
+    def create_context(self, id=uuid.uuid4(), event=None, action=None, parent_id=None, params={}, meta={}, stream=False):
         return Context(
             str(id),
             action=action,
+            event=event,
             parent_id=parent_id,
             params=params,
             meta=meta,

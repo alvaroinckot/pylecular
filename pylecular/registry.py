@@ -37,7 +37,7 @@ class Registry:
             for action in service.actions()
         ])
         self.__events__.extend([
-            Event(f"{service.name}.{event}", self.__node_id__, is_local=True, handler=getattr(service, event))
+            Event(event, self.__node_id__, is_local=True, handler=getattr(service, event))
             for event in service.events()
         ])
         # self.logger.info(f"Service {service.name} registered with {len(self.actions)} actions and {len(self.events)} events.")
@@ -55,10 +55,9 @@ class Registry:
             return action[0]
 
 
-    def get_event(self, name):
-        service, event = name.split(".")
-        service_instance = self.get_service(service)
-        if service_instance:
-            return getattr(service_instance, event, None)
-        return None
+    def get_event(self, name) -> Event:
+        event = [a for a in self.__events__ if a.name == name]
+        if event:
+            return event[0]
+
         

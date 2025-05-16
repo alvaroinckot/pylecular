@@ -89,9 +89,9 @@ class NodeCatalog:
                         for action in service.actions()
                     },
                     "events": {
-                        f"{service.name}.{event}": {
+                        f"{event}": {
                             "rawName": event,
-                            "name": f"{service.name}.{event}"
+                            "name": event
                         }
                         for event in service.events()
                     }

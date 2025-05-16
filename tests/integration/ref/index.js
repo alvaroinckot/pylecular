@@ -15,6 +15,11 @@ broker.createService({
         add(ctx) {
             return Number(ctx.params.a) + Number(ctx.params.b);
         }
+    },
+    events: {
+        seen(ctx) {
+            ctx.logger.info("seen")
+        }
     }
 });
 

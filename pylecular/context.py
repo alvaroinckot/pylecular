@@ -2,9 +2,10 @@ import uuid
 
 class Context:
     # TODO: support stream
-    def __init__(self, id, action=None, parent_id=None, params={}, meta={}, stream=False, broker=None):
+    def __init__(self, id, action=None, event=None, parent_id=None, params={}, meta={}, stream=False, broker=None):
         self.id = id
         self.action = action
+        self.event = event
         self.params = params
         self.meta = meta
         self.parent_id = parent_id
