@@ -2,8 +2,8 @@ import asyncio
 import signal
 from pylecular.context import Context
 from pylecular.discoverer import Discoverer
+from pylecular.lifecycle import Lifecycle
 from pylecular.node import NodeCatalog
-from pylecular.packets import Packet, Packets
 from pylecular.registry import Registry 
 from pylecular.transit import Transit
 from pylecular.logger import structlog
@@ -17,9 +17,10 @@ class Broker:
             node=self.id,
             service="BROKER",
         )
+        self.lifecycle = Lifecycle(broker=self)
         self.registry = Registry(node_id=self.id, logger=self.logger)
         self.node_catalog: NodeCatalog = NodeCatalog(logger=self.logger, node_id=self.id, registry=self.registry)
-        self.transit = Transit(node_id=self.id, registry=self.registry, node_catalog=self.node_catalog)
+        self.transit = Transit(node_id=self.id, registry=self.registry, node_catalog=self.node_catalog, lifecycle=self.lifecycle)
         self.discoverer = Discoverer(broker=self)
 
 
@@ -80,12 +81,11 @@ class Broker:
     # TODO: support unbalanced
     async def call(self, action_name, params):
         endpoint = self.registry.get_action(action_name)
+        context = self.lifecycle.create_context(action=action_name, params=params)
         if endpoint and endpoint.is_local:
-            ctx = Context.build(params=params)
-            return await endpoint.handler(ctx)
+            return await endpoint.handler(context)
         elif endpoint and not endpoint.is_local:
-            ctx = Context.build(params=params)
-            return await self.transit.request(endpoint, params)
+            return await self.transit.request(endpoint, context)
         else:
             raise Exception(f"Action {action_name} not found.")
         

@@ -9,7 +9,7 @@ import psutil
 
 
 class Transit:
-    def __init__(self, node_id=None, registry=None, node_catalog=None, config=None, logger=None):
+    def __init__(self, node_id=None, registry=None, node_catalog=None, config=None, logger=None, lifecycle=None):
         if config is None:
             config = {"type": "nats", "connection": "nats://localhost:4222"} # TODO move config to a config file
         self.node_id = node_id
@@ -18,6 +18,7 @@ class Transit:
         self.loggger = logger
         self.transporter = Transporter.get_by_name(config["type"], config, transit=self, handler=self.__message_handler__, node_id=node_id)
         self._pending_requests = {} 
+        self.lifecycle = lifecycle
 
 
     async def __message_handler__(self, packet: Packet):
@@ -98,11 +99,11 @@ class Transit:
     async def request_handler(self, packet: Packet):
         endpoint = self.registry.get_action(packet.payload.get("action"))
         if endpoint and endpoint.is_local:
-            ctx = Context(id=packet.payload.get("id"), params=packet.payload.get("params"), meta=packet.payload.get("meta"))
+            context = self.lifecycle.rebuild_context(packet.payload)
             try:
-                result = await endpoint.handler(ctx)
+                result = await endpoint.handler(context)
                 response = {
-                    "id": ctx.id,
+                    "id": context.id,
                     "data": result,
                     "success": True,
                     "meta": {}
@@ -117,16 +118,11 @@ class Transit:
         if future:
             future.set_result(packet.payload)
 
-    async def request(self, endpoint, params):
-        ctx = Context.build(params=params)
-        req_id = ctx.id
+    async def request(self, endpoint, context):
+        req_id = context.id
         future = asyncio.get_running_loop().create_future()
         self._pending_requests[req_id] = future
-        await self.publish(Packet(Packets.REQUEST, endpoint.node_id, {
-            "action": endpoint.name,
-            "params": ctx.params,
-            "id": ctx.id
-        }))
+        await self.publish(Packet(Packets.REQUEST, endpoint.node_id, context.marshall()))
         try:
             response = await asyncio.wait_for(future, 5000) # TODO: fetch timeout from settings
             return response.get("data")

@@ -2,27 +2,14 @@ import uuid
 
 class Context:
     # TODO: support stream
-    def __init__(self, id, action=None, request_id=None, parent_id=None, params={}, meta={}, stream=False):
+    def __init__(self, id, action=None, parent_id=None, params={}, meta={}, stream=False, broker=None):
         self.id = id
         self.action = action
         self.params = params
         self.meta = meta
-        self.request_id = request_id if request_id is not None else id
         self.parent_id = parent_id
         self.stream = stream
-
-    @staticmethod
-    def build( action=None, request_id=None, parent_id=None, params={}, meta={}, stream=False):
-        return Context(
-            str(uuid.uuid4()),
-            action=action,
-            request_id=request_id,
-            parent_id=parent_id,
-            params=params,
-            meta=meta,
-            stream=stream
-        )
-    
+        self._broker = broker
 
     def unmarhshall(self):
         return {
@@ -34,7 +21,6 @@ class Context:
             "level": 1,
             "tracing": None,
             "parentID": self.parent_id,
-            "requestID": self.request_id,
             "stream": self.stream,
         }
     
@@ -48,14 +34,11 @@ class Context:
             "level": 1,
             "tracing": None,
             "parentID": self.parent_id,
-            "requestID": self.request_id,
             "stream": self.stream,
         }
 
-    # TODO: implement call
-    def call(service_name, params):
-        pass
+    async def call(self, service_name, params):
+        return await self._broker.call(service_name, params)
 
-    # TODO: implement emit
-    def emit(service_name, params):
-        pass
+    async def emit(self, service_name, params):
+        return await self._broker.call(service_name, params)

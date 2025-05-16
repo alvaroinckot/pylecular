@@ -12,8 +12,15 @@ class MySyservice(Service):
     # TODO: add validation
     @action(params=["param1", "param2"])
     async def foo(self, ctx: Context):
-        return  "100"
+        return  100
 
+
+    @action(params=[])
+    async def bar(self, ctx: Context):
+        a = await ctx.call("myService.foo", {}) # internal context call
+        res = await ctx.call("math.add", { "a": a, "b": 50 }) # remote service call
+        return res
+    
 # Example usage
 import asyncio
 
@@ -39,6 +46,10 @@ async def main():
     mathRes = await broker.call("math.add", {"a": 1, "b": 50 })
 
     broker.logger.info(f"math res is {mathRes}")
+
+    barREs = await broker.call("myService.bar", {})
+
+    broker.logger.info(f"bar res is {barREs}")
 
     await broker.wait_for_shutdown()
 
