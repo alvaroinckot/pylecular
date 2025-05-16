@@ -85,12 +85,7 @@ class Broker:
             return await endpoint.handler(ctx)
         elif endpoint and not endpoint.is_local:
             ctx = Context.build(params=params)
-            self.logger.info(f"Requesting remote {endpoint.node_id}")
-            await self.transit.publish(Packet(Packets.REQUEST, endpoint.node_id, {
-                "action": action_name,
-                "params": params
-            }))
-            # TODO: wait and process response
+            return await self.transit.request(endpoint, params)
         else:
             raise Exception(f"Action {action_name} not found.")
         

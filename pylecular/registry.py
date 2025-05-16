@@ -8,7 +8,6 @@ class Action:
         self.handler = handler
         self.node_id = node_id
         self.is_local = is_local
-        print(f"Action created with values: name={self.name}, node_id={self.node_id}, is_local={self.is_local}, handler={self.handler}")
 
 
 class Event:
@@ -51,7 +50,6 @@ class Registry:
         self.__actions__.append(action)
         
     def get_action(self, name) -> Action:
-        print([a.name for a in self.__actions__])
         action = [a for a in self.__actions__ if a.name == name]
         if action:
             return action[0]
