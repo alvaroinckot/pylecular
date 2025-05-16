@@ -2,7 +2,7 @@
 
 class Service:
     def __init__(self, name, settings=None):
-        self.name = name
+        self.name = name # support version as well
         self.settings = settings or {}
         self.metadata = {}
 
