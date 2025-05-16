@@ -50,6 +50,10 @@ class Transit:
         
     async def disconnect(self):
         await self.publish(Packet(Packets.DISCONNECT, None, {}))
+        for future in self._pending_requests.values():
+            if not future.done():
+                future.cancel()
+        self._pending_requests.clear()
         await self.transporter.disconnect()
 
     async def publish(self, packet: Packet):
@@ -96,7 +100,7 @@ class Transit:
         if endpoint and endpoint.is_local:
             ctx = Context(id=packet.payload.get("id"), params=packet.payload.get("params"), meta=packet.payload.get("meta"))
             try:
-                result = await endpoint.handler(ctx) # TODO: try catch result
+                result = await endpoint.handler(ctx)
                 response = {
                     "id": ctx.id,
                     "data": result,
@@ -123,11 +127,16 @@ class Transit:
             "params": ctx.params,
             "id": ctx.id
         }))
-        response = await future
-        return response.get("data")
+        try:
+            response = await asyncio.wait_for(future, 5000) # TODO: fetch timeout from settings
+            return response.get("data")
+        except asyncio.TimeoutError:
+            self._pending_requests.pop(req_id, None)
+            # Optionally log or raise a custom exception
+            return None
         
 
-    async def sendEvent(self, event):
+    async def send_event(self, event):
         # print(f"Sending event: {event}")
         # Implement event sending logic here
         pass
