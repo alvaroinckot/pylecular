@@ -9,14 +9,15 @@ import psutil
 
 
 class Transit:
-    def __init__(self, node_id=None, registry=None, node_catalog=None, config=None, logger=None, lifecycle=None):
-        if config is None:
-            config = {"type": "nats", "connection": "nats://localhost:4222"} # TODO move config to a config file
+    def __init__(self, node_id=None, registry=None, node_catalog=None, settings=None, logger=None, lifecycle=None):
         self.node_id = node_id
         self.registry = registry
         self.node_catalog = node_catalog
         self.loggger = logger
-        self.transporter = Transporter.get_by_name(config["type"], config, transit=self, handler=self.__message_handler__, node_id=node_id)
+        self.transporter = Transporter.get_by_name(
+            settings.transporter.split("://")[0], 
+            {"connection": settings.transporter}, 
+            transit=self, handler=self.__message_handler__, node_id=node_id)
         self._pending_requests = {} 
         self.lifecycle = lifecycle
 

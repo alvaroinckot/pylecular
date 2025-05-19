@@ -5,22 +5,24 @@ from pylecular.discoverer import Discoverer
 from pylecular.lifecycle import Lifecycle
 from pylecular.node import NodeCatalog
 from pylecular.registry import Registry 
+from pylecular.settings import Settings
 from pylecular.transit import Transit
-from pylecular.logger import structlog
+from pylecular.logger import get_logger
 
 class Broker:
-    def __init__(self, id):
+    def __init__(self, id, settings: Settings=Settings()):
         self.id = id
         self.version = "0.14.5"
         self.namespace = "default"
-        self.logger = structlog.get_logger().bind(
+        self.logger = get_logger(settings.log_level, settings.log_format).bind(
             node=self.id,
             service="BROKER",
+            level=settings.log_level
         )
         self.lifecycle = Lifecycle(broker=self)
         self.registry = Registry(node_id=self.id, logger=self.logger)
         self.node_catalog: NodeCatalog = NodeCatalog(logger=self.logger, node_id=self.id, registry=self.registry)
-        self.transit = Transit(node_id=self.id, registry=self.registry, node_catalog=self.node_catalog, lifecycle=self.lifecycle)
+        self.transit = Transit(settings=settings,node_id=self.id, registry=self.registry, node_catalog=self.node_catalog, lifecycle=self.lifecycle)
         self.discoverer = Discoverer(broker=self)
 
 
