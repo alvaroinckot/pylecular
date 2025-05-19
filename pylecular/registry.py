@@ -36,18 +36,12 @@ class Registry:
             Action(f"{service.name}.{action}",self.__node_id__, is_local=True, handler=getattr(service, action))
             for action in service.actions()
         ])
-        for event in service.events():
-            handler = getattr(service, event)
-            is_callable = callable(handler)
-            event_name = getattr(handler, "_name", event) if is_callable else event
-            print(f"Event {event}: callable={is_callable}, name={event_name}")
         self.__events__.extend([
             Event(getattr(getattr(service, event), "_name", event), self.__node_id__, is_local=True, handler=getattr(service, event))
             for event in service.events()
         ])
         for event in self.__events__:
             print(f"Event {event.name} from node {event.node_id} (local={event.is_local})")
-        # self.logger.info(f"Service {service.name} registered with {len(self.actions)} actions and {len(self.events)} events.")
 
     def get_service(self, name):
         return self.__services__.get(name)
