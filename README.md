@@ -14,16 +14,21 @@ Pylecular is a Python library that implements the [Moleculer](https://moleculer.
 
 ## Installation
 
-Pylecular is not yet available on PyPI. You can install it directly from the source:
+You can install Pylecular using pip:
+
+```bash
+pip install pylecular
+```
+
+For development installation, you can clone the repository and install in editable mode:
 
 ```bash
 git clone https://github.com/alvaroinckot/pylecular.git
 cd pylecular
-pip install .
+pip install -e .
 ```
 
 ## Usage
-
 
 Here is a basic example of how to use Pylecular:
 
