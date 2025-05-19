@@ -13,7 +13,7 @@ class Transit:
         self.node_id = node_id
         self.registry = registry
         self.node_catalog = node_catalog
-        self.loggger = logger
+        self.logger = logger
         self.transporter = Transporter.get_by_name(
             settings.transporter.split("://")[0], 
             {"connection": settings.transporter}, 
@@ -79,7 +79,7 @@ class Transit:
         await self.publish(Packet(Packets.HEARTBEAT, None, heartbeat))
 
     async def send_node_info(self):
-        await self.publish(Packet(Packets.INFO, None, self.node_catalog.local_node.__dict__))
+        await self.publish(Packet(Packets.INFO, None, self.node_catalog.local_node.get_info()))
 
 
     async def discover_handler(self, packet: Packet):
@@ -92,8 +92,7 @@ class Transit:
     async def info_handler(self, packet: Packet):
         node = Node(
             id=packet.payload.get("id"),
-            **packet.payload
-        )
+            **{k: v for k, v in packet.payload.items() if k != "id"})
         self.node_catalog.add_node(packet.target, node)
 
     async def disconnect_handler(self, packet: Packet):
@@ -106,7 +105,8 @@ class Transit:
             try:
                 await endpoint.handler(context)
             except Exception as e:
-                self.logger.error(f"Failed to process event {endpoint.name}.", e)
+                self.logger.error(f"Failed to process event {endpoint.name}")
+                self.logger.error(e)
 
     async def request_handler(self, packet: Packet):
         endpoint = self.registry.get_action(packet.payload.get("action"))

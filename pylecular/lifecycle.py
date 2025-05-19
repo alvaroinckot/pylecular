@@ -25,6 +25,7 @@ class Lifecycle:
         return Context(
             str(context_dict.get('id')),
             action=context_dict.get('action'),
+            event=context_dict.get('event'),
             parent_id=context_dict.get('parent_id'),
             params=context_dict.get('params', {}),
             meta=context_dict.get('meta', {}),

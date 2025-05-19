@@ -49,15 +49,19 @@ class Registry:
         action = Action(name, node_id, is_local=False)
         self.__actions__.append(action)
         
+    def add_event(self, name, node_id):
+        event = Event(name, node_id, is_local=False)
+        self.__events__.append(event)
+
     def get_action(self, name) -> Action:
         action = [a for a in self.__actions__ if a.name == name]
         if action:
             return action[0]
 
+    def get_all_events(self, name):
+        return [a for a in self.__events__ if a.name == name]
 
     def get_event(self, name) -> Event:
-        event = [a for a in self.__events__ if a.name == name]
+        event = self.get_all_events(name)
         if event:
             return event[0]
-
-        

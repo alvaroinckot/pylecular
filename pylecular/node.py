@@ -18,6 +18,9 @@ class Node:
         self.ver = ver
         self.sender = sender
 
+    def get_info(self):
+        # return {k: v for k, v in self.__dict__.items() if k != 'id'} # when sending info, the transit should not send id and sender in the same payload
+        return self.__dict__
 
 class NodeCatalog:
     def __init__(self, registry=None, logger=None, node_id=None):
@@ -36,6 +39,9 @@ class NodeCatalog:
                 actions = service.get("actions", {})
                 for action_name in actions:
                     self.registry.add_action(action_name, id)
+                events = service.get("events", {})
+                for event in events:
+                    self.registry.add_event(event, id)
         self.logger.info(f"Node \"{id}\" added.")
 
     def get_node(self, id):

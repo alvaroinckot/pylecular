@@ -22,7 +22,7 @@ class Broker:
         self.lifecycle = Lifecycle(broker=self)
         self.registry = Registry(node_id=self.id, logger=self.logger)
         self.node_catalog: NodeCatalog = NodeCatalog(logger=self.logger, node_id=self.id, registry=self.registry)
-        self.transit = Transit(settings=settings,node_id=self.id, registry=self.registry, node_catalog=self.node_catalog, lifecycle=self.lifecycle)
+        self.transit = Transit(settings=settings,node_id=self.id, registry=self.registry, node_catalog=self.node_catalog, lifecycle=self.lifecycle, logger=self.logger)
         self.discoverer = Discoverer(broker=self)
 
 
@@ -81,7 +81,7 @@ class Broker:
 
     # TODO: support balancing strategies
     # TODO: support unbalanced
-    async def call(self, action_name, params):
+    async def call(self, action_name, params={}):
         endpoint = self.registry.get_action(action_name)
         context = self.lifecycle.create_context(action=action_name, params=params)
         if endpoint and endpoint.is_local:
@@ -92,12 +92,20 @@ class Broker:
             raise Exception(f"Action {action_name} not found.")
         
 
-    async def emit(self, event_name, params): # TODO: emit with transit 
+    async def emit(self, event_name, params={}): # TODO: emit with transit 
         endpoint = self.registry.get_event(event_name)
         context = self.lifecycle.create_context(event=event_name, params=params)
         if endpoint and endpoint.is_local:
             return await endpoint.handler(context)
         elif endpoint and not endpoint.is_local:
             return await self.transit.send_event(endpoint, context)
-        else:
-            raise Exception(f"Action {event_name} not found.")
+        
+    
+    async def broadcast(self, event_name, params={}):
+        endpoints = self.registry.get_all_events(event_name)
+        context = self.lifecycle.create_context(event=event_name, params=params)
+        await asyncio.gather(*[
+            endpoint.handler(context) if endpoint.is_local 
+            else self.transit.send_event(endpoint, context)
+            for endpoint in endpoints
+        ])
