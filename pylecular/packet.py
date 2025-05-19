@@ -1,7 +1,7 @@
 from enum import Enum
 import string
 
-class Packets(Enum):
+class Topics(Enum):
     HEARTBEAT = "HEARTBEAT"
     EVENT = "EVENT"
     DISCONNECT = "DISCONNECT"
@@ -21,4 +21,4 @@ class Packet:
     @staticmethod
     def from_topic(topic: string):
         parts = topic.split(".")
-        return Packets(parts[1]) # TODO: ensure and test
+        return Topics(parts[1]) # TODO: ensure and test
