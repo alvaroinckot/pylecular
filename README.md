@@ -4,7 +4,7 @@ Pylecular is a Python library that implements the [Moleculer](https://moleculer.
 
 ## Status
 
-🚧 **Alpha Stage**: Pylecular is currently in its early development phase. It does not yet support all features of the Moleculer protocol. Expect breaking changes and limited functionality.
+🚧 **Early Development**: Pylecular is in alpha stage and under active development. Currently, it supports basic Moleculer protocol features and only includes NATS transport integration. The API is not stable, and breaking changes are expected. Use with caution in production environments.
 
 ## Features
 
