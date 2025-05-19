@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pylecular"
-version = "0.1.1"
+version = "0.1.2"
 description = "Python Moleculer Library"
 authors = [
     { name = "Alvaro Inckot", email = "alvaroinckot@gmail.com" }
@@ -14,11 +14,13 @@ requires-python = ">=3.8"
 dependencies = [
     "nats-py>=2.10.0",
     "structlog>=25.3.0",
+    "psutil>=7.0.0"
 ]
 
 [project.optional-dependencies]
 test = [
-    "pytest>=8.3.5"
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0"
 ]
 
 [tool.pytest.ini_options]
