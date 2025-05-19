@@ -45,3 +45,6 @@ class Context:
 
     async def emit(self, service_name, params={}):
         return await self._broker.emit(service_name, params)
+
+    async def broacast(self, service_name, params={}):
+        return await self._broker.broadcast(service_name, params)
