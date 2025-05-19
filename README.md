@@ -31,9 +31,12 @@ For more complete examples, check the `/examples` folder in the repository:
 
 
 ```python
-from pylecular import ServiceBroker, action
+from pylecular.context import Context
+from pylecular.service import Service
+from pylecular.decorators import action, event
+from pylecular.broker import Broker
 
-broker = ServiceBroker()
+broker = ServiceBroker("broker-sample")
 
 class MathService(Service):
     name = "math"
@@ -54,7 +57,7 @@ class MathService(Service):
           
           return result
 
-     @event("calculation.done")
+     @event(name="calculation.done")
      def calculation_done_handler(self, ctx):
           print(f"Calculation done: {ctx.params}")
 
