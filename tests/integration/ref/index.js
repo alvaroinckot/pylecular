@@ -19,6 +19,9 @@ broker.createService({
     events: {
         seen(ctx) {
             ctx.logger.info("seen")
+        },
+        "test.abc.foo": {
+            handler: () => {}
         }
     }
 });

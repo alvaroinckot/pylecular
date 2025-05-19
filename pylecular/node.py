@@ -82,6 +82,12 @@ class NodeCatalog:
             # "version": version,
         }
         # TODO: local_node.services is essentialy different from the class Service
+        # Debug print for service events
+        for service in self.registry.__services__.values():
+            for event in service.events():
+                event_name = getattr(getattr(service, event), "_name", event)
+                print(f"Service: {service.name}, Event: {event}, Name: {event_name}")
+
         self.local_node.services = [
                 {
                     "name": service.name,
@@ -96,9 +102,8 @@ class NodeCatalog:
                         for action in service.actions()
                     },
                     "events": {
-                        f"{event}": {
-                            "rawName": event,
-                            "name": event
+                        f"{getattr(getattr(service, event), "_name", event)}": {
+                            "name": getattr(getattr(service, event), "_name", event)
                         }
                         for event in service.events()
                     }

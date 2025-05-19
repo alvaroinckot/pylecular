@@ -24,7 +24,11 @@ pip install .
 
 ## Usage
 
+
 Here is a basic example of how to use Pylecular:
+
+For more complete examples, check the `/examples` folder in the repository:
+
 
 ```python
 from pylecular import ServiceBroker, action
@@ -32,13 +36,34 @@ from pylecular import ServiceBroker, action
 broker = ServiceBroker()
 
 class MathService(Service):
-    @action(params=None)
-    def add(self, ctx):
-        return ctx.params.get("a") + ctx.params.get("b")
+    name = "math"
+
+    def __init__(self):
+        super().__init__(self.name)
+
+    @action()
+     def add(self, ctx):
+          # Regular action
+          result = ctx.params.get("a") + ctx.params.get("b")
+          
+          # Emit event to local listeners
+          ctx.emit("calculation.done", {"operation": "add", "result": result})
+          
+          # Broadcast event to all nodes
+          ctx.broadcast("calculation.completed", {"operation": "add", "result": result})
+          
+          return result
+
+     @event("calculation.done")
+     def calculation_done_handler(self, ctx):
+          print(f"Calculation done: {ctx.params}")
 
 broker.register(MathService())
 
-broker.start()
+await broker.start()
+
+await broker.call("math.add", { "a": 5, "b": 20 })
+
 ```
 
 ## Roadmap

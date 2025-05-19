@@ -27,6 +27,11 @@ class MySyservice(Service):
     @event()
     async def checked(self, ctx: Context):
         print("checked called")
+
+    @event(name="foo.bar.lol")
+    async def complex_handler(self, ctx: Context):
+        print("compled called")
+    
     
 # Example usage
 import asyncio
