@@ -40,11 +40,17 @@ class Context:
             "stream": self.stream,
         }
 
-    async def call(self, service_name, params={}):
-        return await self._broker.call(service_name, params)
+    async def _prepare_meta(self, meta={}):
+        return {**self.meta, **meta}
 
-    async def emit(self, service_name, params={}):
+    async def call(self, service_name, params={}, meta={}):
+        meta = await self._prepare_meta(meta)
+        return await self._broker.call(service_name, params, meta)
+
+    async def emit(self, service_name, params={}, meta={}):
+        meta = await self._prepare_meta(meta)
         return await self._broker.emit(service_name, params)
 
-    async def broacast(self, service_name, params={}):
+    async def broacast(self, service_name, params={}, meta={}):
+        meta = await self._prepare_meta(meta)
         return await self._broker.broadcast(service_name, params)
