@@ -12,7 +12,7 @@ from pylecular.logger import get_logger
 class Broker:
     def __init__(self, id, settings: Settings=Settings()):
         self.id = id
-        self.version = "0.14.5"
+        self.version = "0.14.35"
         self.namespace = "default"
         self.logger = get_logger(settings.log_level, settings.log_format).bind(
             node=self.id,
