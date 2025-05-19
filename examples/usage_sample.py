@@ -55,11 +55,11 @@ async def main():
 
     broker.logger.info("remote services ready")
 
-    mathRes = await broker.call("math.add", {"a": 1, "b": 50 })
+    mathRes = await broker.call("math.add", {"a": 1, "b": 50 })  # remote action on tests/intetgration
 
     broker.logger.info(f"math res is {mathRes}")
 
-    barREs = await broker.call("myService.bar", {})
+    barREs = await broker.call("myService.bar", {}, meta={ "tenant": "foobar-company" })
 
     broker.logger.info(f"bar res is {barREs}")
 

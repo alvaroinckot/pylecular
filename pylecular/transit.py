@@ -3,7 +3,7 @@ import asyncio
 from pylecular.context import Context
 from pylecular.node import Node
 from pylecular.transporter.base import Transporter
-from pylecular.packets import Packet,Packets
+from pylecular.packet import Packet,Topics
 from pylecular.transporter.base import Transporter
 import psutil
 
@@ -23,29 +23,29 @@ class Transit:
 
 
     async def __message_handler__(self, packet: Packet):
-        if packet.type == Packets.INFO:
+        if packet.type == Topics.INFO:
             await self.info_handler(packet)
-        elif packet.type == Packets.DISCOVER:
+        elif packet.type == Topics.DISCOVER:
             await self.discover_handler(packet)
-        elif packet.type == Packets.HEARTBEAT:
+        elif packet.type == Topics.HEARTBEAT:
             await self.heartbeat_handler(packet)
-        elif packet.type == Packets.REQUEST:
+        elif packet.type == Topics.REQUEST:
             await self.request_handler(packet)
-        elif packet.type == Packets.RESPONSE:
+        elif packet.type == Topics.RESPONSE:
             await self.response_handler(packet)
-        elif packet.type == Packets.EVENT:
+        elif packet.type == Topics.EVENT:
             await self.event_handler(packet)
-        elif packet.type == Packets.DISCONNECT:
+        elif packet.type == Topics.DISCONNECT:
             await self.disconnect_handler(packet)
 
     async def __make_subscriptions__(self):
-        await self.transporter.subscribe(Packets.INFO.value)
-        await self.transporter.subscribe(Packets.INFO.value, self.node_id)
-        await self.transporter.subscribe(Packets.DISCONNECT.value)
-        await self.transporter.subscribe(Packets.HEARTBEAT.value)
-        await self.transporter.subscribe(Packets.REQUEST.value, self.node_id)
-        await self.transporter.subscribe(Packets.RESPONSE.value, self.node_id)
-        await self.transporter.subscribe(Packets.EVENT.value, self.node_id)
+        await self.transporter.subscribe(Topics.INFO.value)
+        await self.transporter.subscribe(Topics.INFO.value, self.node_id)
+        await self.transporter.subscribe(Topics.DISCONNECT.value)
+        await self.transporter.subscribe(Topics.HEARTBEAT.value)
+        await self.transporter.subscribe(Topics.REQUEST.value, self.node_id)
+        await self.transporter.subscribe(Topics.RESPONSE.value, self.node_id)
+        await self.transporter.subscribe(Topics.EVENT.value, self.node_id)
 
 
     async def connect(self):
@@ -56,7 +56,7 @@ class Transit:
 
         
     async def disconnect(self):
-        await self.publish(Packet(Packets.DISCONNECT, None, {}))
+        await self.publish(Packet(Topics.DISCONNECT, None, {}))
         for future in self._pending_requests.values():
             if not future.done():
                 future.cancel()
@@ -68,7 +68,7 @@ class Transit:
 
 
     async def discover(self):
-        await self.publish(Packet(Packets.DISCOVER, None, {}))
+        await self.publish(Packet(Topics.DISCOVER, None, {}))
 
 
     async def beat(self):
@@ -76,10 +76,10 @@ class Transit:
             "cpu": psutil.cpu_percent(interval=1),
 
         }
-        await self.publish(Packet(Packets.HEARTBEAT, None, heartbeat))
+        await self.publish(Packet(Topics.HEARTBEAT, None, heartbeat))
 
     async def send_node_info(self):
-        await self.publish(Packet(Packets.INFO, None, self.node_catalog.local_node.get_info()))
+        await self.publish(Packet(Topics.INFO, None, self.node_catalog.local_node.get_info()))
 
 
     async def discover_handler(self, packet: Packet):
@@ -120,7 +120,7 @@ class Transit:
                     "success": True,
                     "meta": {}
                 }
-                await self.publish(Packet(Packets.RESPONSE, packet.target, response))
+                await self.publish(Packet(Topics.RESPONSE, packet.target, response))
             except Exception as e:
                 self.logger.error(f"Failed call to {endpoint.name}.", e)
 
@@ -134,7 +134,7 @@ class Transit:
         req_id = context.id
         future = asyncio.get_running_loop().create_future()
         self._pending_requests[req_id] = future
-        await self.publish(Packet(Packets.REQUEST, endpoint.node_id, context.marshall()))
+        await self.publish(Packet(Topics.REQUEST, endpoint.node_id, context.marshall()))
         try:
             response = await asyncio.wait_for(future, 5000) # TODO: fetch timeout from settings
             return response.get("data")
@@ -145,6 +145,6 @@ class Transit:
         
 
     async def send_event(self, endpoint, context):
-        await self.publish(Packet(Packets.EVENT, endpoint.node_id, context.marshall()))
+        await self.publish(Packet(Topics.EVENT, endpoint.node_id, context.marshall()))
 
 

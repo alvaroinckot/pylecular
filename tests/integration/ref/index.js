@@ -13,6 +13,7 @@ broker.createService({
     name: "math",
     actions: {
         add(ctx) {
+            console.log("meta: " + JSON.stringify(ctx.meta))
             return Number(ctx.params.a) + Number(ctx.params.b);
         }
     },
