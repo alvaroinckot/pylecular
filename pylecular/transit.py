@@ -34,10 +34,13 @@ class Transit:
             await self.response_handler(packet)
         elif packet.type == Packets.EVENT:
             await self.event_handler(packet)
+        elif packet.type == Packets.DISCONNECT:
+            await self.disconnect_handler(packet)
 
     async def __make_subscriptions__(self):
         await self.transporter.subscribe(Packets.INFO.value)
         await self.transporter.subscribe(Packets.INFO.value, self.node_id)
+        await self.transporter.subscribe(Packets.DISCONNECT.value)
         await self.transporter.subscribe(Packets.HEARTBEAT.value)
         await self.transporter.subscribe(Packets.REQUEST.value, self.node_id)
         await self.transporter.subscribe(Packets.RESPONSE.value, self.node_id)
@@ -82,8 +85,7 @@ class Transit:
         await self.send_node_info()
 
     async def heartbeat_handler(self, packet: Packet):
-        # print(f"Handling heartbeat: {packet}")
-        # Implement heartbeat handling logic here
+        # TODO: setup heartbeat times
         pass
 
     async def info_handler(self, packet: Packet):
@@ -94,9 +96,7 @@ class Transit:
         self.node_catalog.add_node(packet.target, node)
 
     async def disconnect_handler(self, packet: Packet):
-        # print(f"Handling disconnect: {packet}")
-        # Implement disconnect handling logic here
-        pass
+        self.node_catalog.disconnect_node(packet.target)
 
     async def event_handler(self,packet: Packet):
         endpoint = self.registry.get_event(packet.payload.get("event"))

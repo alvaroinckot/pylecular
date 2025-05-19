@@ -28,7 +28,6 @@ class NatsTransporter(Transporter):
         return topic
     
     async def message_handler(self, msg):
-        # print(f"Received message: {msg}")
         data = json.loads(msg.data.decode("utf-8"))
         type = Packet.from_topic(msg.subject)
         sender = data.get("sender")

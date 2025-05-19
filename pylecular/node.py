@@ -45,12 +45,13 @@ class NodeCatalog:
         if id in self.nodes:
             del self.nodes[id]
 
+
     def disconnect_node(self, id):
         node = self.get_node(id)
         if node:
             node.available = False
-            self.logger.info(f"Node {id} is disconnected.")
-            # self.remove_node(id)
+            self.logger.info(f"Node \"{id} \" is disconnected.")
+            self.remove_node(id)
 
     def process_node_info(self, node_id, payload):
         node = self.get_node(node_id)
@@ -60,7 +61,7 @@ class NodeCatalog:
         node.available = True
         node.cpu = payload.get("cpu", 0)
         node.services = payload.get("services", [])
-        self.logger.info(f"Node {node_id} is connected.")
+        self.logger.info(f"Node \"{node_id}\" is connected.")
 
 
     def ensure_local_node(self):
