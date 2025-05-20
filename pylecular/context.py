@@ -1,4 +1,3 @@
-import uuid
 
 class Context:
     # TODO: support stream

@@ -1,10 +1,8 @@
 
 import asyncio
-from pylecular.context import Context
 from pylecular.node import Node
 from pylecular.transporter.base import Transporter
-from pylecular.packet import Packet,Topics
-from pylecular.transporter.base import Transporter
+from pylecular.packet import Packet, Topics
 import psutil
 
 

@@ -1,7 +1,5 @@
 import pytest
-import asyncio
-import signal
-import os
+import pytest_asyncio
 from unittest.mock import Mock, AsyncMock
 from pylecular.broker import Broker
 from pylecular.settings import Settings
@@ -53,12 +51,9 @@ def mock_node_catalog():
 def mock_lifecycle():
     return Mock(spec=Lifecycle)
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def broker(mock_transit, mock_registry, mock_node_catalog, mock_lifecycle):
-    # Create and set an event loop for the test
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
+    """Create a broker instance for testing."""
     settings = Settings(transporter="mock://localhost:4222")
     broker = Broker(
         "test-node",
@@ -68,41 +63,33 @@ async def broker(mock_transit, mock_registry, mock_node_catalog, mock_lifecycle)
         node_catalog=mock_node_catalog,
         lifecycle=mock_lifecycle
     )
-    return broker
+    yield broker
+    # Clean up the broker when the test is done
+    await broker.stop()
 
 @pytest.mark.asyncio
 async def test_broker_initialization(broker):
-    broker_instance = await broker
-    assert broker_instance.id == "test-node"
-    assert broker_instance.version == "0.14.35"
-    assert broker_instance.namespace == "default"
-    assert broker_instance.registry is not None
-    assert broker_instance.transit is not None
+    assert broker.id == "test-node"
+    assert broker.version == "0.14.35"
+    assert broker.namespace == "default"
+    assert broker.registry is not None
+    assert broker.transit is not None
     
 
 @pytest.mark.asyncio
 async def test_broker_start(broker, mock_transit):
-    broker_instance = await broker
-    await broker_instance.start()
+    await broker.start()
 
 
 @pytest.mark.asyncio
 async def test_broker_stop(broker, mock_transit):
-    broker_instance = await broker
-    await broker_instance.stop()
-
-
-@pytest.mark.asyncio
-async def test_broker_stop(broker, mock_transit):
-    broker_instance = await broker
-    await broker_instance.stop()
+    await broker.stop()
     mock_transit.disconnect.assert_called_once()
 
 @pytest.mark.asyncio
 async def test_broker_register_service(broker, mock_registry, mock_node_catalog):
-    broker_instance = await broker
     service = TestService()
-    broker_instance.register(service)
+    broker.register(service)
     mock_registry.register.assert_called_once_with(service)
     mock_node_catalog.ensure_local_node.assert_called_once()
 
@@ -115,10 +102,8 @@ async def test_broker_call_local_action(broker, mock_registry, mock_lifecycle):
     
     context = Mock()
     mock_lifecycle.create_context.return_value = context
-    
-    broker_instance = await broker
 
-    result = await broker_instance.call("test.hello", {"param": "value"})
+    result = await broker.call("test.hello", {"param": "value"})
     
     assert result == "result"
     mock_registry.get_action.assert_called_once_with("test.hello")
@@ -133,10 +118,8 @@ async def test_broker_call_remote_action(broker, mock_registry, mock_transit, mo
     
     context = Mock()
     mock_lifecycle.create_context.return_value = context
-    
-    broker_instance = await broker
 
-    result = await broker_instance.call("remote.action")
+    result = await broker.call("remote.action")
     
     assert result == "remote result"
     mock_transit.request.assert_called_once_with(endpoint, context)
@@ -144,11 +127,9 @@ async def test_broker_call_remote_action(broker, mock_registry, mock_transit, mo
 
 @pytest.mark.asyncio
 async def test_broker_call_nonexistent_action(broker, mock_registry):
-    broker_instance = await broker
-
     mock_registry.get_action.return_value = None
     with pytest.raises(Exception, match="Action nonexistent.action not found."):
-        await broker_instance.call("nonexistent.action")
+        await broker.call("nonexistent.action")
 
 @pytest.mark.asyncio
 async def test_broker_emit_local_event(broker, mock_registry, mock_lifecycle):
@@ -158,10 +139,8 @@ async def test_broker_emit_local_event(broker, mock_registry, mock_lifecycle):
     
     context = Mock()
     mock_lifecycle.create_context.return_value = context
-    
-    broker_instance = await broker
 
-    await broker_instance.emit("test_event", {"param": "value"})
+    await broker.emit("test_event", {"param": "value"})
     
     endpoint.handler.assert_called_once_with(context)
 
@@ -173,10 +152,8 @@ async def test_broker_emit_remote_event(broker, mock_registry, mock_transit, moc
     
     context = Mock()
     mock_lifecycle.create_context.return_value = context
-
-    broker_instance = await broker
     
-    await broker_instance.emit("remote.event")
+    await broker.emit("remote.event")
     
     mock_transit.send_event.assert_called_once_with(endpoint, context)
 
@@ -190,10 +167,8 @@ async def test_broker_broadcast_event(broker, mock_registry, mock_transit, mock_
     
     context = Mock()
     mock_lifecycle.create_context.return_value = context
-    
-    broker_instance = await broker
 
-    await broker_instance.broadcast("test_event")
+    await broker.broadcast("test_event")
     
     local_endpoint.handler.assert_called_once_with(context)
     mock_transit.send_event.assert_called_once_with(remote_endpoint, context)
@@ -201,8 +176,7 @@ async def test_broker_broadcast_event(broker, mock_registry, mock_transit, mock_
 @pytest.mark.asyncio
 async def test_wait_for_services_found_locally(broker, mock_registry):
     mock_registry.get_service.return_value = Mock()
-    broker_instance = await broker
-    await broker_instance.wait_for_services(["test"])
+    await broker.wait_for_services(["test"])
     mock_registry.get_service.assert_called_once_with("test")
 
 @pytest.mark.asyncio
@@ -212,8 +186,7 @@ async def test_wait_for_services_found_remotely(broker, mock_registry, mock_node
     remote_node.id = "remote-node"
     remote_node.services = [{"name": "test"}]
     mock_node_catalog.nodes.values.return_value = [remote_node]
-    broker_instance = await broker
-    await broker_instance.wait_for_services(["test"])
+    await broker.wait_for_services(["test"])
 
 @pytest.mark.asyncio
 async def test_broker_call_local_action_with_error(broker, mock_registry, mock_lifecycle):
@@ -225,11 +198,9 @@ async def test_broker_call_local_action_with_error(broker, mock_registry, mock_l
     context = Mock()
     mock_lifecycle.create_context.return_value = context
     
-    broker_instance = await broker
-
     # Verify that the error is propagated
     with pytest.raises(ValueError, match="Test error"):
-        await broker_instance.call("test.error")
+        await broker.call("test.error")
     
     mock_registry.get_action.assert_called_once_with("test.error")
     endpoint.handler.assert_called_once_with(context)
@@ -242,11 +213,9 @@ async def test_broker_call_remote_action_with_error(broker, mock_registry, mock_
     
     context = Mock()
     mock_lifecycle.create_context.return_value = context
-    
-    broker_instance = await broker
 
     # Verify that the remote error is propagated
     with pytest.raises(Exception, match="RemoteError: Test error"):
-        await broker_instance.call("remote.error")
+        await broker.call("remote.error")
     
     mock_transit.request.assert_called_once_with(endpoint, context)

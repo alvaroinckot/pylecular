@@ -15,7 +15,7 @@ def get_parsed_log_level(log_level):
     return LOG_LEVEL_MAP.get(log_level, logging.INFO)
 
 def moleculer_format_renderer(_, __, event_dict):
-    timestamp = datetime.datetime.utcnow().isoformat(timespec="milliseconds") + "Z"
+    timestamp = datetime.datetime.now(datetime.UTC).isoformat(timespec="milliseconds") + "Z"
     level = event_dict.pop("level", "INFO").upper()
     node = event_dict.pop("node", "<unknown>")
     service = event_dict.pop("service", "<unspecified>")

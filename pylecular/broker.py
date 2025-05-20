@@ -1,6 +1,5 @@
 import asyncio
 import signal
-from pylecular.context import Context
 from pylecular.discoverer import Discoverer
 from pylecular.lifecycle import Lifecycle
 from pylecular.node import NodeCatalog
@@ -45,6 +44,10 @@ class Broker:
 
 
     async def stop(self):
+        # First stop the discoverer to cancel periodic tasks
+        if hasattr(self.discoverer, 'stop'):
+            await self.discoverer.stop()
+        # Then disconnect the transit
         await self.transit.disconnect()
         self.logger.info("Service broker is stopped. Good bye.")
 
