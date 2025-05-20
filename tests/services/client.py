@@ -5,16 +5,14 @@ This script demonstrates how to interact with the services started by the pylecu
 """
 
 import asyncio
-import sys
 import os
-import time
+import sys
 
 # Add parent directory to path for imports
 parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(parent_dir)
 
 from pylecular.broker import Broker
-from pylecular.settings import Settings
 
 
 async def run_client():

@@ -1,11 +1,13 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # import pylecular
-from pylecular.context import Context
-from pylecular.service import Service
-from pylecular.decorators import action, event
 from pylecular.broker import Broker
-    
+from pylecular.context import Context
+from pylecular.decorators import action, event
+from pylecular.service import Service
+
+
 class MySyservice(Service):
     name = "myService"
 
@@ -13,7 +15,7 @@ class MySyservice(Service):
         super().__init__(self.name)
 
     # TODO: add validation
-    @action(params=["param1", "param2"])
+    @action(params=[])
     async def foo(self, ctx: Context):
         return  100
 
@@ -35,6 +37,7 @@ class MySyservice(Service):
     
 # Example usage
 import asyncio
+
 
 async def main():
     broker = Broker("broker1")

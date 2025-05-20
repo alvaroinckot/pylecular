@@ -1,11 +1,13 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # import pylecular
-from pylecular.context import Context
-from pylecular.service import Service
-from pylecular.decorators import event
 from pylecular.broker import Broker
-    
+from pylecular.context import Context
+from pylecular.decorators import event
+from pylecular.service import Service
+
+
 class MySyservice(Service):
     name = "myService"
 
@@ -24,6 +26,7 @@ class MySyservice(Service):
 
 # Example usage
 import asyncio
+
 
 async def main():
     broker3 = Broker("broker-b3")

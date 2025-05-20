@@ -1,6 +1,10 @@
 
-from abc import ABC, abstractmethod
 import importlib
+from abc import ABC, abstractmethod
+from typing import Optional
+
+from pylecular.packet import Packet
+
 
 class Transporter(ABC):
     def __init__(self, name):
@@ -15,11 +19,11 @@ class Transporter(ABC):
         pass
 
     @abstractmethod
-    async def publish(self):
+    async def publish(self, packet: Packet):
         pass
 
     @abstractmethod
-    async def subscribe(self, command, topic):
+    async def subscribe(self, command, topic: Optional[str] = None):
         pass
 
     @classmethod

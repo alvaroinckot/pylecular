@@ -12,6 +12,51 @@ Pylecular is a Python library that implements the [Moleculer](https://moleculer.
 - Support for service-to-service communication.
 - Extensible and modular design.
 
+## Development
+
+### Code Linting
+
+Pylecular uses [Ruff](https://github.com/astral-sh/ruff) for code linting and formatting. Ruff is a fast Python linter that helps maintain code quality.
+
+To set up development dependencies:
+
+```bash
+# Install development dependencies
+pip install -e ".[dev]"
+```
+
+To lint your code:
+
+```bash
+# Check your code for linting issues
+ruff check .
+
+# Automatically fix many common issues
+ruff check --fix .
+```
+
+### Pre-commit Hooks
+
+To ensure code quality before each commit, Pylecular uses pre-commit hooks. These hooks will automatically check and fix your code before committing.
+
+```bash
+# Install pre-commit hooks
+pre-commit install
+
+# Run pre-commit hooks manually (optional)
+pre-commit run --all-files
+```
+
+VS Code integration is included in the project settings. If you're using VS Code with the recommended extensions, you'll get:
+- Real-time linting feedback as you type
+- Automatic formatting on save
+- Quick fixes for many common issues
+
+The recommended VS Code extensions are:
+- [Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff) - For linting and formatting
+- [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) - Python language support
+- [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) - Fast type checking and language features
+
 ## Installation
 
 You can install Pylecular using pip:

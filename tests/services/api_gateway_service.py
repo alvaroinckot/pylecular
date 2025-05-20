@@ -1,7 +1,7 @@
-from pylecular.service import Service
+
 from pylecular.context import Context
-from pylecular.decorators import action, event
-import asyncio
+from pylecular.decorators import action
+from pylecular.service import Service
 
 
 class ApiGatewayService(Service):

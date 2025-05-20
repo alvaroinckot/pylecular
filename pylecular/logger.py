@@ -1,6 +1,7 @@
 import datetime
 import logging
 import sys
+
 import structlog
 
 LOG_LEVEL_MAP = {
