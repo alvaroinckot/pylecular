@@ -60,23 +60,23 @@ async def run_client():
     # Create a client broker
     broker = Broker("client-1")
     await broker.start()
-    
+
     # Call the math service
     result = await broker.call("math.add", {"a": 5, "b": 10})
     print(f"5 + 10 = {result}")
-    
+
     # Call the greeter service
     greeting = await broker.call("greeter.hello", {"name": "Developer"})
     print(greeting)
-    
+
     # Call through the API gateway
     api_result = await broker.call("api.call", {
-        "service": "users", 
-        "action": "list", 
+        "service": "users",
+        "action": "list",
         "params": {}
     })
     print(f"Users: {api_result}")
-    
+
     await broker.stop()
 
 asyncio.run(run_client())

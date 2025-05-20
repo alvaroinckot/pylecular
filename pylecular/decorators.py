@@ -1,11 +1,14 @@
 from typing import Callable
 
+
 def action(params=None):
     def decorator(func) -> Callable:
         func._is_action = True
         func._params = params
         return func
+
     return decorator
+
 
 def event(name=None, params=None):
     def decorator(func):
@@ -13,4 +16,5 @@ def event(name=None, params=None):
         func._name = name if name else func.__name__
         func._params = params
         return func
+
     return decorator

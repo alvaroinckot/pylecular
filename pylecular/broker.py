@@ -11,30 +11,38 @@ from pylecular.transit import Transit
 
 
 class Broker:
-    def __init__(self, 
-                 id, 
-                 settings: Settings=Settings(),
-                 version: str="0.14.35",
-                 namespace: str="default",
-                 lifecycle=None,
-                 registry=None,
-                 node_catalog=None,
-                 transit=None,
-                 discoverer=None):
+    def __init__(
+        self,
+        id,
+        settings: Settings = Settings(),
+        version: str = "0.14.35",
+        namespace: str = "default",
+        lifecycle=None,
+        registry=None,
+        node_catalog=None,
+        transit=None,
+        discoverer=None,
+    ):
         self.id = id
         self.version = version
         self.namespace = namespace
         self.logger = get_logger(settings.log_level, settings.log_format).bind(
-            node=self.id,
-            service="BROKER",
-            level=settings.log_level
+            node=self.id, service="BROKER", level=settings.log_level
         )
         self.lifecycle = lifecycle or Lifecycle(broker=self)
         self.registry = registry or Registry(node_id=self.id, logger=self.logger)
-        self.node_catalog = node_catalog or NodeCatalog(logger=self.logger, node_id=self.id, registry=self.registry)
-        self.transit = transit or Transit(settings=settings, node_id=self.id, registry=self.registry, node_catalog=self.node_catalog, lifecycle=self.lifecycle, logger=self.logger)
+        self.node_catalog = node_catalog or NodeCatalog(
+            logger=self.logger, node_id=self.id, registry=self.registry
+        )
+        self.transit = transit or Transit(
+            settings=settings,
+            node_id=self.id,
+            registry=self.registry,
+            node_catalog=self.node_catalog,
+            lifecycle=self.lifecycle,
+            logger=self.logger,
+        )
         self.discoverer = discoverer or Discoverer(broker=self)
-
 
     async def start(self):
         self.logger.info(f"Moleculer v{self.version} is starting...")
@@ -42,12 +50,13 @@ class Broker:
         self.logger.info(f"Node ID: {self.id}.")
         self.logger.info(f"Transporter: {self.transit.transporter.name}.")
         await self.transit.connect()
-        self.logger.info(f"✔ Service broker with {len(self.registry.__services__)} services started.")
-
+        self.logger.info(
+            f"✔ Service broker with {len(self.registry.__services__)} services started."
+        )
 
     async def stop(self):
         # First stop the discoverer to cancel periodic tasks
-        if hasattr(self.discoverer, 'stop'):
+        if hasattr(self.discoverer, "stop"):
             await self.discoverer.stop()
         # Then disconnect the transit
         await self.transit.disconnect()
@@ -86,7 +95,6 @@ class Broker:
                 return
             await asyncio.sleep(0.1)
 
-
     # TODO: fix service lyfecicle handling on catalog
     # TODO: if service is alive send INFO
     def register(self, service):
@@ -103,11 +111,12 @@ class Broker:
                 # Validate parameters if schema is defined
                 if endpoint.params_schema:
                     from pylecular.validator import ValidationError, validate_params
+
                     try:
                         validate_params(context.params, endpoint.params_schema)
                     except ValidationError as ve:
                         raise ve  # Re-raise the validation error to be caught below
-                
+
                 if endpoint.handler is None:
                     raise Exception(f"Handler for action {action_name} is None.")
                 return await endpoint.handler(context)
@@ -120,7 +129,6 @@ class Broker:
             return await self.transit.request(endpoint, context)
         else:
             raise Exception(f"Action {action_name} not found.")
-        
 
     async def emit(self, event_name, params={}, meta={}):
         endpoint = self.registry.get_event(event_name)
@@ -131,13 +139,16 @@ class Broker:
             return await self.transit.send_event(endpoint, context)
         else:
             raise Exception(f"Event {event_name} not found.")
-        
-    
+
     async def broadcast(self, event_name, params={}, meta={}):
         endpoints = self.registry.get_all_events(event_name)
         context = self.lifecycle.create_context(event=event_name, params=params, meta=meta)
-        await asyncio.gather(*[
-            endpoint.handler(context) if endpoint.is_local and endpoint.handler
-            else self.transit.send_event(endpoint, context)
-            for endpoint in endpoints if endpoint.is_local and endpoint.handler or not endpoint.is_local
-        ])
+        await asyncio.gather(
+            *[
+                endpoint.handler(context)
+                if endpoint.is_local and endpoint.handler
+                else self.transit.send_event(endpoint, context)
+                for endpoint in endpoints
+                if (endpoint.is_local and endpoint.handler) or not endpoint.is_local
+            ]
+        )

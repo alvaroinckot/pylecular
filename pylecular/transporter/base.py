@@ -1,4 +1,3 @@
-
 import importlib
 from abc import ABC, abstractmethod
 from typing import Optional
@@ -9,7 +8,7 @@ from pylecular.packet import Packet
 class Transporter(ABC):
     def __init__(self, name):
         self.name = name
-        
+
     @abstractmethod
     async def connect(self):
         pass
@@ -27,7 +26,9 @@ class Transporter(ABC):
         pass
 
     @classmethod
-    def get_by_name(cls, name: str, config: dict, transit, handler=None, node_id=None) -> "Transporter":
+    def get_by_name(
+        cls: type["Transporter"], name: str, config: dict, transit, handler=None, node_id=None
+    ) -> "Transporter":
         importlib.import_module("pylecular.transporter.nats")
 
         for subclass in cls.__subclasses__():
@@ -37,6 +38,7 @@ class Transporter(ABC):
 
     @classmethod
     @abstractmethod
-    def from_config(cls, config: dict, transit, handler=None, node_id=None) -> "Transporter":
+    def from_config(
+        cls: type["Transporter"], config: dict, transit, handler=None, node_id=None
+    ) -> "Transporter":
         pass
-

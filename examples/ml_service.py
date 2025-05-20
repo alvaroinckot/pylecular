@@ -1,7 +1,7 @@
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # import pylecular
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # import pylecular
 import numpy as np
 from sklearn.linear_model import LinearRegression  # require scikit-learn
 
@@ -27,6 +27,7 @@ class MLService(Service):
         prediction = self.model.predict([[x]])
         return float(prediction[0])
 
+
 # Example usage
 import asyncio
 
@@ -38,7 +39,7 @@ async def main():
 
     await broker.start()
 
-    res = await broker.call("ml.predict", {"x": 4 })
+    res = await broker.call("ml.predict", {"x": 4})
 
     broker.logger.info(f"ml predicted {res}")
 

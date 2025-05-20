@@ -1,7 +1,7 @@
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # import pylecular
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # import pylecular
 from pylecular.broker import Broker
 from pylecular.context import Context
 from pylecular.decorators import action, event
@@ -17,15 +17,14 @@ class MySyservice(Service):
     # TODO: add validation
     @action(params=[])
     async def foo(self, ctx: Context):
-        return  100
-
+        return 100
 
     @action(params=[])
     async def bar(self, ctx: Context):
-        a = await ctx.call("myService.foo", {}) # internal context call
-        res = await ctx.call("math.add", { "a": a, "b": 50 }) # remote service call
+        a = await ctx.call("myService.foo", {})  # internal context call
+        res = await ctx.call("math.add", {"a": a, "b": 50})  # remote service call
         return res
-    
+
     @event()
     async def checked(self, ctx: Context):
         print("checked called")
@@ -33,8 +32,8 @@ class MySyservice(Service):
     @event(name="foo.bar.lol")
     async def complex_handler(self, ctx: Context):
         print("compled called")
-    
-    
+
+
 # Example usage
 import asyncio
 
@@ -58,16 +57,19 @@ async def main():
 
     broker.logger.info("remote services ready")
 
-    mathRes = await broker.call("math.add", {"a": 1, "b": 50 })  # remote action on tests/intetgration
+    mathRes = await broker.call(
+        "math.add", {"a": 1, "b": 50}
+    )  # remote action on tests/intetgration
 
     broker.logger.info(f"math res is {mathRes}")
 
-    barREs = await broker.call("myService.bar", {}, meta={ "tenant": "foobar-company" })
+    barREs = await broker.call("myService.bar", {}, meta={"tenant": "foobar-company"})
 
     broker.logger.info(f"bar res is {barREs}")
 
     await broker.emit("checked", {})
 
     await broker.wait_for_shutdown()
+
 
 asyncio.run(main())

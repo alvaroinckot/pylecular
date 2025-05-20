@@ -28,7 +28,7 @@ class TestService(Service):
     @event(name="custom.event")
     async def another_event(self, _):
         return "Custom event received"
-    
+
 
 @pytest.fixture(scope="function")
 def mock_transit():
@@ -38,11 +38,13 @@ def mock_transit():
     transit.transporter = Mock(name="mock_nats")
     return transit
 
+
 @pytest.fixture
 def mock_registry():
     registry = Mock(spec=Registry)
     registry.__services__ = {}
     return registry
+
 
 @pytest.fixture
 def mock_node_catalog():
@@ -50,9 +52,11 @@ def mock_node_catalog():
     catalog.nodes = Mock()
     return catalog
 
+
 @pytest.fixture
 def mock_lifecycle():
     return Mock(spec=Lifecycle)
+
 
 @pytest_asyncio.fixture
 async def broker(mock_transit, mock_registry, mock_node_catalog, mock_lifecycle):
@@ -64,11 +68,12 @@ async def broker(mock_transit, mock_registry, mock_node_catalog, mock_lifecycle)
         transit=mock_transit,
         registry=mock_registry,
         node_catalog=mock_node_catalog,
-        lifecycle=mock_lifecycle
+        lifecycle=mock_lifecycle,
     )
     yield broker
     # Clean up the broker when the test is done
     await broker.stop()
+
 
 @pytest.mark.asyncio
 async def test_broker_initialization(broker):
@@ -77,7 +82,7 @@ async def test_broker_initialization(broker):
     assert broker.namespace == "default"
     assert broker.registry is not None
     assert broker.transit is not None
-    
+
 
 @pytest.mark.asyncio
 async def test_broker_start(broker, mock_transit):
@@ -88,6 +93,7 @@ async def test_broker_start(broker, mock_transit):
 async def test_broker_stop(broker, mock_transit):
     await broker.stop()
     mock_transit.disconnect.assert_called_once()
+
 
 @pytest.mark.asyncio
 async def test_broker_register_service(broker, mock_registry, mock_node_catalog):
@@ -102,12 +108,12 @@ async def test_broker_call_local_action(broker, mock_registry, mock_lifecycle):
     endpoint = Mock(is_local=True)
     endpoint.handler = AsyncMock(return_value="result")
     mock_registry.get_action.return_value = endpoint
-    
+
     context = Mock()
     mock_lifecycle.create_context.return_value = context
 
     result = await broker.call("test.hello", {"param": "value"})
-    
+
     assert result == "result"
     mock_registry.get_action.assert_called_once_with("test.hello")
     endpoint.handler.assert_called_once_with(context)
@@ -118,12 +124,12 @@ async def test_broker_call_remote_action(broker, mock_registry, mock_transit, mo
     endpoint = Mock(is_local=False, node_id="remote-node")
     mock_registry.get_action.return_value = endpoint
     mock_transit.request.return_value = "remote result"
-    
+
     context = Mock()
     mock_lifecycle.create_context.return_value = context
 
     result = await broker.call("remote.action")
-    
+
     assert result == "remote result"
     mock_transit.request.assert_called_once_with(endpoint, context)
 
@@ -134,17 +140,18 @@ async def test_broker_call_nonexistent_action(broker, mock_registry):
     with pytest.raises(Exception, match="Action nonexistent.action not found."):
         await broker.call("nonexistent.action")
 
+
 @pytest.mark.asyncio
 async def test_broker_emit_local_event(broker, mock_registry, mock_lifecycle):
     endpoint = Mock(is_local=True)
     endpoint.handler = AsyncMock()
     mock_registry.get_event.return_value = endpoint
-    
+
     context = Mock()
     mock_lifecycle.create_context.return_value = context
 
     await broker.emit("test_event", {"param": "value"})
-    
+
     endpoint.handler.assert_called_once_with(context)
 
 
@@ -152,35 +159,38 @@ async def test_broker_emit_local_event(broker, mock_registry, mock_lifecycle):
 async def test_broker_emit_remote_event(broker, mock_registry, mock_transit, mock_lifecycle):
     endpoint = Mock(is_local=False)
     mock_registry.get_event.return_value = endpoint
-    
+
     context = Mock()
     mock_lifecycle.create_context.return_value = context
-    
+
     await broker.emit("remote.event")
-    
+
     mock_transit.send_event.assert_called_once_with(endpoint, context)
+
 
 @pytest.mark.asyncio
 async def test_broker_broadcast_event(broker, mock_registry, mock_transit, mock_lifecycle):
     local_endpoint = Mock(is_local=True)
     local_endpoint.handler = AsyncMock()
     remote_endpoint = Mock(is_local=False)
-    
+
     mock_registry.get_all_events.return_value = [local_endpoint, remote_endpoint]
-    
+
     context = Mock()
     mock_lifecycle.create_context.return_value = context
 
     await broker.broadcast("test_event")
-    
+
     local_endpoint.handler.assert_called_once_with(context)
     mock_transit.send_event.assert_called_once_with(remote_endpoint, context)
+
 
 @pytest.mark.asyncio
 async def test_wait_for_services_found_locally(broker, mock_registry):
     mock_registry.get_service.return_value = Mock()
     await broker.wait_for_services(["test"])
     mock_registry.get_service.assert_called_once_with("test")
+
 
 @pytest.mark.asyncio
 async def test_wait_for_services_found_remotely(broker, mock_registry, mock_node_catalog):
@@ -191,34 +201,38 @@ async def test_wait_for_services_found_remotely(broker, mock_registry, mock_node
     mock_node_catalog.nodes.values.return_value = [remote_node]
     await broker.wait_for_services(["test"])
 
+
 @pytest.mark.asyncio
 async def test_broker_call_local_action_with_error(broker, mock_registry, mock_lifecycle):
     # Set up a mock endpoint that raises an exception
     endpoint = Mock(is_local=True)
     endpoint.handler = AsyncMock(side_effect=ValueError("Test error"))
     mock_registry.get_action.return_value = endpoint
-    
+
     context = Mock()
     mock_lifecycle.create_context.return_value = context
-    
+
     # Verify that the error is propagated
     with pytest.raises(ValueError, match="Test error"):
         await broker.call("test.error")
-    
+
     mock_registry.get_action.assert_called_once_with("test.error")
     endpoint.handler.assert_called_once_with(context)
 
+
 @pytest.mark.asyncio
-async def test_broker_call_remote_action_with_error(broker, mock_registry, mock_transit, mock_lifecycle):
+async def test_broker_call_remote_action_with_error(
+    broker, mock_registry, mock_transit, mock_lifecycle
+):
     endpoint = Mock(is_local=False, node_id="remote-node", name="remote.action")
     mock_registry.get_action.return_value = endpoint
     mock_transit.request.side_effect = Exception("RemoteError: Test error")
-    
+
     context = Mock()
     mock_lifecycle.create_context.return_value = context
 
     # Verify that the remote error is propagated
     with pytest.raises(Exception, match="RemoteError: Test error"):
         await broker.call("remote.error")
-    
+
     mock_transit.request.assert_called_once_with(endpoint, context)

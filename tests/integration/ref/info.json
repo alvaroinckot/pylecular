@@ -177,7 +177,7 @@
                                 }
                             ]
                         },
-                        "excludes": { 
+                        "excludes": {
                             "type": "multi",
                             "optional": true,
                             "rules": [

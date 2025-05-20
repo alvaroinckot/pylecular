@@ -17,7 +17,7 @@ class Discoverer:
             except asyncio.CancelledError:
                 # Handle task cancellation gracefully
                 pass
-        
+
         task = asyncio.create_task(periodic_beat())
         self._tasks.append(task)
 

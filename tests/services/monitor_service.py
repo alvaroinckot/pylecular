@@ -11,11 +11,7 @@ class MonitorService(Service):
     def __init__(self):
         super().__init__(self.name)
         self.start_time = time.time()
-        self.metrics = {
-            "requests_processed": 0,
-            "errors": 0,
-            "last_request_time": None
-        }
+        self.metrics = {"requests_processed": 0, "errors": 0, "last_request_time": None}
         self.health_status = "healthy"
 
     @action(params=[])
@@ -37,12 +33,12 @@ class MonitorService(Service):
             await ctx.emit("monitor.health_changed", {"status": status})
             return {"success": True, "status": status}
         return {"success": False, "error": "Invalid status"}
-    
+
     @event()
     async def request_processed(self, ctx: Context):
         self.metrics["requests_processed"] += 1
         self.metrics["last_request_time"] = time.time()
-        
+
     @event()
     async def error_occurred(self, ctx: Context):
         self.metrics["errors"] += 1

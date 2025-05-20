@@ -1,7 +1,7 @@
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # import pylecular
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # import pylecular
 from pylecular.broker import Broker
 from pylecular.context import Context
 from pylecular.decorators import event
@@ -18,11 +18,12 @@ class MySyservice(Service):
     async def checked(self, ctx: Context):
         print("checked ctx.id: " + ctx.id)
         await ctx.emit("done")
-    
+
     @event()
     async def done(self, ctx: Context):
         print("done ctx.id: " + ctx.id)
         print("done called")
+
 
 # Example usage
 import asyncio
@@ -42,14 +43,13 @@ async def main():
     broker2.register(mysvc2)
     await broker2.start()
 
-
     await asyncio.sleep(1)
 
     await broker3.wait_for_services(["myService"])
 
-
     await broker3.broadcast("checked", {})
 
     await broker3.wait_for_shutdown()
+
 
 asyncio.run(main())

@@ -67,6 +67,8 @@ ignore = [
     "PLR0912", # Temporarily disable "Too many branches"
     "PLR0915", # Temporarily disable "Too many statements"
     "PLR0911", # Temporarily disable "Too many return statements"
+    "ANN202",  # Temporarily disable "Self return type"
+    "ANN101"
 ]
 
 # Allow autofix for all enabled rules
@@ -80,7 +82,7 @@ known-first-party = ["pylecular"]
 # Per-file ignores
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"tests/**/*.py" = ["ANN", "PLR2004", "E402"] 
+"tests/**/*.py" = ["ANN", "PLR2004", "E402"]
 "examples/**/*.py" = ["E402", "ANN", "N806", "F841", "PLR0915"]
 "pylecular/**/*.py" = ["ANN204", "ANN001", "ANN201", "N803"] # Temp: Disable annotations for now
 

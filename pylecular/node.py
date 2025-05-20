@@ -1,12 +1,27 @@
-
-from logging import Logger
 import sys
+from logging import Logger
 
 from pylecular.registry import Registry
 
 
 class Node:
-    def __init__(self, id, available=True, local=False, services=None, cpu=0, client=None, ipList=None, hostname=None, config=None, instanceID=None, metadata=None, seq=0, ver=0, sender=None):
+    def __init__(
+        self,
+        id,
+        available=True,
+        local=False,
+        services=None,
+        cpu=0,
+        client=None,
+        ipList=None,
+        hostname=None,
+        config=None,
+        instanceID=None,
+        metadata=None,
+        seq=0,
+        ver=0,
+        sender=None,
+    ):
         self.id = id
         self.available = available
         self.local = local
@@ -26,6 +41,7 @@ class Node:
         # return {k: v for k, v in self.__dict__.items() if k != 'id'} # when sending info, the transit should not send id and sender in the same payload
         return self.__dict__
 
+
 class NodeCatalog:
     def __init__(self, registry: Registry, logger: Logger, node_id: str):
         self.nodes = {}
@@ -34,7 +50,6 @@ class NodeCatalog:
         self.node_id = node_id
         self.local_node = None
         self.ensure_local_node()
-
 
     def add_node(self, id: str, node: Node):
         self.nodes[id] = node
@@ -46,7 +61,7 @@ class NodeCatalog:
                 events = service.get("events", {})
                 for event in events:
                     self.registry.add_event(event, id)
-        self.logger.info(f"Node \"{id}\" added.")
+        self.logger.info(f'Node "{id}" added.')
 
     def get_node(self, id):
         return self.nodes.get(id)
@@ -55,12 +70,11 @@ class NodeCatalog:
         if id in self.nodes:
             del self.nodes[id]
 
-
     def disconnect_node(self, id):
         node = self.get_node(id)
         if node:
             node.available = False
-            self.logger.info(f"Node \"{id} \" is disconnected.")
+            self.logger.info(f'Node "{id} " is disconnected.')
             self.remove_node(id)
 
     def process_node_info(self, node_id, payload):
@@ -71,8 +85,7 @@ class NodeCatalog:
         node.available = True
         node.cpu = payload.get("cpu", 0)
         node.services = payload.get("services", [])
-        self.logger.info(f"Node \"{node_id}\" is connected.")
-
+        self.logger.info(f'Node "{node_id}" is connected.')
 
     def ensure_local_node(self):
         if not self.local_node:
@@ -93,24 +106,24 @@ class NodeCatalog:
                 print(f"Service: {service.name}, Event: {event}, Name: {event_name}")
 
         self.local_node.services = [
-                {
-                    "name": service.name,
-                    "fullName": service.name,
-                    "settings": service.settings,
-                    "metadata": service.metadata,
-                    "actions": {
-                        f"{service.name}.{action}": {
-                            "rawName": action,
-                            "name": f"{service.name}.{action}"
-                        }
-                        for action in service.actions()
-                    },
-                    "events": {
-                        f"{getattr(getattr(service, event), "_name", event)}": {
-                            "name": getattr(getattr(service, event), "_name", event)
-                        }
-                        for event in service.events()
+            {
+                "name": service.name,
+                "fullName": service.name,
+                "settings": service.settings,
+                "metadata": service.metadata,
+                "actions": {
+                    f"{service.name}.{action}": {
+                        "rawName": action,
+                        "name": f"{service.name}.{action}",
                     }
-                } 
-                for service in self.registry.__services__.values() 
-            ]
+                    for action in service.actions()
+                },
+                "events": {
+                    f"{getattr(getattr(service, event), "_name", event)}": {
+                        "name": getattr(getattr(service, event), "_name", event)
+                    }
+                    for event in service.events()
+                },
+            }
+            for service in self.registry.__services__.values()
+        ]

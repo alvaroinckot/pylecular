@@ -3,7 +3,9 @@ import asyncio
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # Add pylecular to path
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)  # Add pylecular to path
 
 from pylecular.broker import Broker
 from pylecular.context import Context
@@ -25,8 +27,10 @@ class ErrorService(Service):
     @action()
     async def throw_custom_error(self, ctx: Context):
         """Throws a custom error type."""
+
         class CustomServiceError(Exception):
             pass
+
         raise CustomServiceError("This is a custom error type")
 
     @action()
@@ -46,22 +50,22 @@ class ErrorService(Service):
                 "status": "error",
                 "error_type": e.__class__.__name__,
                 "error_message": str(e),
-                "handled": True
+                "handled": True,
             }
 
 
 async def main():
     # Create a broker
     broker = Broker("error-example")
-    
+
     # Create and register our service
     error_service = ErrorService()
     broker.register(error_service)
-    
+
     # Start the broker
     print("Starting broker...")
     await broker.start()
-    
+
     print("\n1. Calling a successful action:")
     try:
         result = await broker.call("error.success")

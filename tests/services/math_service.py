@@ -26,7 +26,7 @@ class MathService(Service):
         a = float(ctx.params.get("a", 0))
         b = float(ctx.params.get("b", 0))
         return a * b
-        
+
     @action(params=["a", "b"])
     async def divide(self, ctx: Context):
         a = float(ctx.params.get("a", 0))

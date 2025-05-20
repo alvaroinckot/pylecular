@@ -1,9 +1,19 @@
-
 from typing import Any, Dict
+
 
 class Context:
     # TODO: support stream
-    def __init__(self, id, action=None, event=None, parent_id=None, params={}, meta={}, stream=False, broker: Any=None):
+    def __init__(
+        self,
+        id,
+        action=None,
+        event=None,
+        parent_id=None,
+        params={},
+        meta={},
+        stream=False,
+        broker: Any = None,
+    ):
         self.id = id
         self.action = action
         self.event = event
@@ -26,7 +36,7 @@ class Context:
             "parentID": self.parent_id,
             "stream": self.stream,
         }
-    
+
     def marshall(self):
         return {
             "id": self.id,

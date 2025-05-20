@@ -1,4 +1,3 @@
-
 from pylecular.context import Context
 from pylecular.decorators import action, event
 from pylecular.service import Service
@@ -14,10 +13,10 @@ class GreeterService(Service):
     async def hello(self, ctx: Context):
         name = ctx.params.get("name", "World")
         message = f"Hello, {name}!"
-        
+
         # Emit a greeting event
         await ctx.emit("greeter.greeting", {"name": name, "message": message})
-        
+
         return message
 
     @action(params=["name"])
@@ -28,7 +27,7 @@ class GreeterService(Service):
     @action(params=[])
     async def goodbye(self, ctx: Context):
         return "Goodbye! Thank you for using Pylecular!"
-        
+
     @event(name="greeting")
     async def on_greeting(self, ctx: Context):
         name = ctx.params.get("name")

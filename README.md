@@ -1,6 +1,6 @@
 # Pylecular
 
-Pylecular is a Python library that implements the [Moleculer](https://moleculer.services/) protocol, enabling microservices communication and orchestration. 
+Pylecular is a Python library that implements the [Moleculer](https://moleculer.services/) protocol, enabling microservices communication and orchestration.
 
 ## Status
 
@@ -87,10 +87,10 @@ from pylecular.context import Context
 # Define a service
 class GreeterService(Service):
     name = "greeter"
-    
+
     def __init__(self):
         super().__init__(self.name)
-    
+
     @action(params=["name"])
     async def hello(self, ctx: Context):
         name = ctx.params.get("name", "World")
@@ -99,17 +99,17 @@ class GreeterService(Service):
 async def main():
     # Create a broker
     broker = Broker("my-node")
-    
+
     # Register the service
     broker.register(GreeterService())
-    
+
     # Start the broker
     await broker.start()
-    
+
     # Make a call
     result = await broker.call("greeter.hello", {"name": "John"})
     print(result)  # Outputs: Hello, John!
-    
+
     # Wait for termination
     await broker.wait_for_shutdown()
 
@@ -150,7 +150,7 @@ pylecular services -l DEBUG
 The CLI will:
 1. Start a broker
 2. Import and register all services found in the specified directory
-3. Wait for requests 
+3. Wait for requests
 4. Gracefully shut down on SIGINT or SIGTERM signals (Ctrl+C)
 
 Here is a basic example of how to use Pylecular:
@@ -176,13 +176,13 @@ class MathService(Service):
      def add(self, ctx):
           # Regular action
           result = ctx.params.get("a") + ctx.params.get("b")
-          
+
           # Emit event to local listeners
           ctx.emit("calculation.done", {"operation": "add", "result": result})
-          
+
           # Broadcast event to all nodes
           ctx.broadcast("calculation.completed", {"operation": "add", "result": result})
-          
+
           return result
 
      @event(name="calculation.done")

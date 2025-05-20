@@ -1,4 +1,3 @@
-
 from pylecular.context import Context
 from pylecular.decorators import action
 from pylecular.service import Service
@@ -16,30 +15,26 @@ class ApiGatewayService(Service):
         service = ctx.params.get("service")
         action = ctx.params.get("action")
         params = ctx.params.get("params", {})
-        
+
         if not service or not action:
             return {"success": False, "error": "Service and action are required"}
-        
+
         try:
             # Call the requested service action
             result = await ctx.call(f"{service}.{action}", params)
-            
+
             # Log the call
-            await ctx.emit("monitor.request_processed", {
-                "service": service, 
-                "action": action,
-                "success": True
-            })
-            
+            await ctx.emit(
+                "monitor.request_processed", {"service": service, "action": action, "success": True}
+            )
+
             return {"success": True, "data": result}
         except Exception as e:
             # Log the error
-            await ctx.emit("monitor.error_occurred", {
-                "service": service,
-                "action": action,
-                "error": str(e)
-            })
-            
+            await ctx.emit(
+                "monitor.error_occurred", {"service": service, "action": action, "error": str(e)}
+            )
+
             return {"success": False, "error": str(e)}
 
     @action(params=[])

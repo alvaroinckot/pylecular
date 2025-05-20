@@ -1,6 +1,3 @@
-
-
-
 class Action:
     def __init__(self, name, node_id, is_local, handler=None, params_schema=None):
         self.name = name
@@ -18,10 +15,9 @@ class Event:
         self.is_local = is_local
 
 
-
 class Registry:
     def __init__(self, node_id=None, logger=None):
-        self.__services__ = {} # local services
+        self.__services__ = {}  # local services
         self.__actions__ = []
         self.__events__ = []
         self.__node_id__ = node_id
@@ -32,35 +28,39 @@ class Registry:
 
     def register(self, service):
         self.__services__[service.name] = service
-        self.__actions__.extend([
-            Action(
-                f"{service.name}.{action}",
-                self.__node_id__,
-                is_local=True,
-                handler=getattr(service, action),
-                params_schema=getattr(getattr(service, action), "_params", None)
-            )
-            for action in service.actions()
-        ])
-        self.__events__.extend([
-            Event(
-                getattr(getattr(service, event), "_name", event),
-                self.__node_id__,
-                is_local=True,
-                handler=getattr(service, event)
-            )
-            for event in service.events()
-        ])
+        self.__actions__.extend(
+            [
+                Action(
+                    f"{service.name}.{action}",
+                    self.__node_id__,
+                    is_local=True,
+                    handler=getattr(service, action),
+                    params_schema=getattr(getattr(service, action), "_params", None),
+                )
+                for action in service.actions()
+            ]
+        )
+        self.__events__.extend(
+            [
+                Event(
+                    getattr(getattr(service, event), "_name", event),
+                    self.__node_id__,
+                    is_local=True,
+                    handler=getattr(service, event),
+                )
+                for event in service.events()
+            ]
+        )
         for event in self.__events__:
             print(f"Event {event.name} from node {event.node_id} (local={event.is_local})")
 
     def get_service(self, name):
         return self.__services__.get(name)
-    
+
     def add_action(self, name, node_id):
         action = Action(name, node_id, is_local=False)
         self.__actions__.append(action)
-        
+
     def add_event(self, name, node_id):
         event = Event(name, node_id, is_local=False)
         self.__events__.append(event)
