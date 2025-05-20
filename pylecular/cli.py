@@ -30,51 +30,34 @@ def import_services_from_directory(directory_path: str) -> List[Service]:
 
     # Add the directory to path to allow imports
     sys.path.insert(0, str(directory.parent))
-    patchers = []
     
-    try:
-        for file_path in python_files:
-            try:
-                # Skip __init__ and other special files
-                if file_path.name.startswith("__"):
-                    continue
-                    
-                module_name = file_path.stem
-                spec = importlib.util.spec_from_file_location(module_name, str(file_path))
+    for file_path in python_files:
+        try:
+            # Skip __init__ and other special files
+            if file_path.name.startswith("__"):
+                continue
                 
-                if spec is None or spec.loader is None:
-                    continue
-                    
-                module = importlib.util.module_from_spec(spec)
+            module_name = file_path.stem
+            spec = importlib.util.spec_from_file_location(module_name, str(file_path))
+            
+            if spec is None or spec.loader is None:
+                continue
                 
-                # Patch the module before executing it to prevent asyncio.run conflicts
-                try:
-                    restore = patch_module(module)
-                    patchers.append(restore)
-                except Exception:
-                    pass  # Not all modules will have asyncio, that's fine
-                
-                spec.loader.exec_module(module)
-                
-                # Find all Service subclasses in the module
-                for name, obj in inspect.getmembers(module):
-                    if (inspect.isclass(obj) and issubclass(obj, Service) and obj != Service):
-                        try:
-                            service_instance = obj()
-                            services.append(service_instance)
-                            print(f"Found service: {service_instance.name}")
-                        except Exception as e:
-                            print(f"Error instantiating service {name}: {e}")
-                            
-            except Exception as e:
-                print(f"Error importing {file_path}: {e}")
-    finally:
-        # Restore all patched modules
-        for restore in patchers:
-            try:
-                restore()
-            except Exception:
-                pass
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            
+            # Find all Service subclasses in the module
+            for name, obj in inspect.getmembers(module):
+                if (inspect.isclass(obj) and issubclass(obj, Service) and obj != Service):
+                    try:
+                        service_instance = obj()
+                        services.append(service_instance)
+                        print(f"Found service: {service_instance.name}")
+                    except Exception as e:
+                        print(f"Error instantiating service {name}: {e}")
+                        
+        except Exception as e:
+            print(f"Error importing {file_path}: {e}")
                 
     return services
 
