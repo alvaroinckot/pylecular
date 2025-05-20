@@ -139,5 +139,5 @@ class Broker:
         await asyncio.gather(*[
             endpoint.handler(context) if endpoint.is_local and endpoint.handler
             else self.transit.send_event(endpoint, context)
-            for endpoint in endpoints if endpoint.is_local and endpoint.handler or not endpoint.is_local
+            for endpoint in endpoints if (endpoint.is_local and endpoint.handler) or not endpoint.is_local
         ])
