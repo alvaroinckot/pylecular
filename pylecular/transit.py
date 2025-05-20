@@ -111,6 +111,14 @@ class Transit:
         if endpoint and endpoint.is_local:
             context = self.lifecycle.rebuild_context(packet.payload)
             try:
+                # Validate parameters if schema is defined
+                if endpoint.params_schema:
+                    from pylecular.validator import validate_params, ValidationError
+                    try:
+                        validate_params(context.params, endpoint.params_schema)
+                    except ValidationError as ve:
+                        raise ve  # Re-raise the validation error to be caught below
+                
                 result = await endpoint.handler(context)
                 response = {
                     "id": context.id,

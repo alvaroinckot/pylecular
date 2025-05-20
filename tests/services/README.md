@@ -24,6 +24,10 @@ This directory contains sample microservices for testing the Pylecular CLI comma
    - Gateway to access other services
    - Actions: call, services
 
+6. **ValidationService** (`validation_service.py`)
+   - Demonstrates parameter validation features
+   - Actions: store, retrieve, register
+
 ## Running the Services
 
 Use the `pylecular` command to run these services:

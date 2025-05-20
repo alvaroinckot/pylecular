@@ -2,11 +2,12 @@
 
 
 class Action:
-    def __init__(self, name, node_id, is_local, handler=None):
+    def __init__(self, name, node_id, is_local, handler=None, params_schema=None):
         self.name = name
         self.handler = handler
         self.node_id = node_id
         self.is_local = is_local
+        self.params_schema = params_schema
 
 
 class Event:
@@ -32,11 +33,22 @@ class Registry:
     def register(self, service):
         self.__services__[service.name] = service
         self.__actions__.extend([
-            Action(f"{service.name}.{action}",self.__node_id__, is_local=True, handler=getattr(service, action))
+            Action(
+                f"{service.name}.{action}",
+                self.__node_id__,
+                is_local=True,
+                handler=getattr(service, action),
+                params_schema=getattr(getattr(service, action), "_params", None)
+            )
             for action in service.actions()
         ])
         self.__events__.extend([
-            Event(getattr(getattr(service, event), "_name", event), self.__node_id__, is_local=True, handler=getattr(service, event))
+            Event(
+                getattr(getattr(service, event), "_name", event),
+                self.__node_id__,
+                is_local=True,
+                handler=getattr(service, event)
+            )
             for event in service.events()
         ])
         for event in self.__events__:
