@@ -60,7 +60,7 @@ class Transit:
 
         
     async def disconnect(self):
-        await self.publish(Packet(Topics.DISCONNECT.value, None, {}))
+        await self.publish(Packet(Topics.DISCONNECT, None, {}))
         for future in self._pending_requests.values():
             if not future.done():
                 future.cancel()
@@ -72,7 +72,7 @@ class Transit:
 
 
     async def discover(self):
-        await self.publish(Packet(Topics.DISCOVER.value, None, {}))
+        await self.publish(Packet(Topics.DISCOVER, None, {}))
 
 
     async def beat(self):
@@ -80,13 +80,13 @@ class Transit:
             "cpu": psutil.cpu_percent(interval=1),
 
         }
-        await self.publish(Packet(Topics.HEARTBEAT.value, None, heartbeat))
+        await self.publish(Packet(Topics.HEARTBEAT, None, heartbeat))
 
     async def send_node_info(self):
         if self.node_catalog.local_node is None:
             self.logger.error("Local node is not initialized")
             return
-        await self.publish(Packet(Topics.INFO.value, None, self.node_catalog.local_node.get_info()))
+        await self.publish(Packet(Topics.INFO, None, self.node_catalog.local_node.get_info()))
 
 
     async def discover_handler(self, packet: Packet):
@@ -151,7 +151,7 @@ class Transit:
                     "success": False,
                     "meta": {}
                 }
-            await self.publish(Packet(Topics.RESPONSE.value, packet.target, response))
+            await self.publish(Packet(Topics.RESPONSE, packet.target, response))
 
     async def response_handler(self, packet: Packet):
         req_id = packet.payload.get("id")
@@ -163,7 +163,7 @@ class Transit:
         req_id = context.id
         future = asyncio.get_running_loop().create_future()
         self._pending_requests[req_id] = future
-        await self.publish(Packet(Topics.REQUEST.value, endpoint.node_id, context.marshall()))
+        await self.publish(Packet(Topics.REQUEST, endpoint.node_id, context.marshall()))
         try:
             response = await asyncio.wait_for(future, 5000) # TODO: fetch timeout from settings
             if not response.get("success", True):
@@ -186,6 +186,6 @@ class Transit:
         
 
     async def send_event(self, endpoint, context):
-        await self.publish(Packet(Topics.EVENT.value, endpoint.node_id, context.marshall()))
+        await self.publish(Packet(Topics.EVENT, endpoint.node_id, context.marshall()))
 
 

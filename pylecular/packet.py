@@ -13,8 +13,8 @@ class Topics(Enum):
 
 
 class Packet:
-    def __init__(self, type: str, target, payload):
-        self.type = type
+    def __init__(self, Topics: Topics, target, payload):
+        self.type = Topics
         self.target = target
         self.payload = payload
 

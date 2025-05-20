@@ -24,8 +24,8 @@ class NatsTransporter(Transporter):
         payload["ver"] = "4"
         payload["sender"] = self.node_id
         return json.dumps(payload).encode('utf-8')
-    
-    def get_topic_name(self, command, node_id=None):
+
+    def get_topic_name(self, command: str, node_id: str | None = None):
         topic = f"MOL.{command}"
         if node_id:
             topic += f".{node_id}"
@@ -42,7 +42,7 @@ class NatsTransporter(Transporter):
             raise ValueError("Message received but no handler is defined")
 
     async def publish(self, packet: Packet):
-        topic = self.get_topic_name(packet.type, packet.target) 
+        topic = self.get_topic_name(packet.type.value, packet.target) 
         await self.nc.publish(topic, self._serialize(packet.payload))
 
     async def connect(self):
