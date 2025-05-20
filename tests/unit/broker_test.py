@@ -1,7 +1,4 @@
 import pytest
-import asyncio
-import signal
-import os
 import pytest_asyncio
 from unittest.mock import Mock, AsyncMock
 from pylecular.broker import Broker

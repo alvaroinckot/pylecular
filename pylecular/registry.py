@@ -1,5 +1,4 @@
 
-from pylecular.node import NodeCatalog
 
 
 class Action:

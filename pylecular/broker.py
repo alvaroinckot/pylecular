@@ -1,6 +1,5 @@
 import asyncio
 import signal
-from pylecular.context import Context
 from pylecular.discoverer import Discoverer
 from pylecular.lifecycle import Lifecycle
 from pylecular.node import NodeCatalog

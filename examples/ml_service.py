@@ -3,10 +3,9 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # import pylecular
 from pylecular.context import Context
 from pylecular.service import Service
-from pylecular.decorators import action, event
+from pylecular.decorators import action
 from pylecular.broker import Broker
 from sklearn.linear_model import LinearRegression # require scikit-learn
-import numpy as np
 import numpy as np
 
 class MLService(Service):
