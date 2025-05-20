@@ -5,39 +5,13 @@ import asyncio
 import signal
 import importlib.util
 import inspect
-import types
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List
 
 from pylecular.broker import Broker
 from pylecular.service import Service
 from pylecular.settings import Settings
 import argparse
-
-
-def patch_asyncio():
-    """
-    Patch the global asyncio.run function to prevent conflicts with the CLI's event loop.
-    This is needed because example files often contain asyncio.run at the module level.
-    """
-    # Save the original asyncio.run function
-    original_run = asyncio.run
-    stored_coroutines = []
-    
-    # Create a no-op version that doesn't interfere with our event loop
-    def patched_run(coro):
-        # Just store the coroutine for later inspection if needed
-        stored_coroutines.append(coro)
-        return None
-    
-    # Patch the global asyncio.run
-    asyncio.run = patched_run
-    
-    # Return a function to restore the original
-    def restore():
-        asyncio.run = original_run
-    
-    return restore
 
 
 def import_services_from_directory(directory_path: str) -> List[Service]:
