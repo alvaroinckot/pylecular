@@ -1,4 +1,3 @@
-# filepath: /home/edurdias/projects/pylecular/tests/unit/broker_test.py
 import pytest
 import asyncio
 import signal
