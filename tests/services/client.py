@@ -21,27 +21,24 @@ async def run_client():
     # Create a client broker
     broker = Broker("client-1")
     
-    print("Starting client...\n")
-    await broker.start()
-    
     try:
-        # Wait for services to become available
-        print("Waiting for services to be available...")
-        await asyncio.sleep(1)  # Give services time to register
+        # Start the broker
+        print("Starting client broker...")
+        await broker.start()
         
         # Test math service
         print("\n----- Testing Math Service -----")
-        result = await broker.call("math.add", {"a": 5, "b": 10})
-        print(f"5 + 10 = {result}")
+        addition = await broker.call("math.add", {"a": 5, "b": 10})
+        print(f"5 + 10 = {addition}")
         
-        result = await broker.call("math.subtract", {"a": 20, "b": 8})
-        print(f"20 - 8 = {result}")
+        subtraction = await broker.call("math.subtract", {"a": 15, "b": 7})
+        print(f"15 - 7 = {subtraction}")
         
-        result = await broker.call("math.multiply", {"a": 6, "b": 7})
-        print(f"6 * 7 = {result}")
+        product = await broker.call("math.multiply", {"a": 6, "b": 8})
+        print(f"6 * 8 = {product}")
         
-        result = await broker.call("math.divide", {"a": 100, "b": 5})
-        print(f"100 / 5 = {result}")
+        quotient = await broker.call("math.divide", {"a": 20, "b": 4})
+        print(f"20 / 4 = {quotient}")
         
         # Test greeter service
         print("\n----- Testing Greeter Service -----")
@@ -87,6 +84,70 @@ async def run_client():
             "params": {"a": 42, "b": 58}
         })
         print(f"API gateway call: {gateway_result}")
+        
+        # Test validation service
+        print("\n----- Testing Validation Service -----")
+        print("\nTesting simple validation (store):")
+        try:
+            store_result = await broker.call("validators.store", {
+                "id": "item1",
+                "data": {"value": "Test data", "timestamp": "2025-05-20"}
+            })
+            print(f"✅ Store successful: {store_result}")
+        except Exception as e:
+            print(f"❌ Store error: {e}")
+        
+        print("\nTesting type validation (retrieve):")
+        try:
+            retrieve_result = await broker.call("validators.retrieve", {
+                "id": "item1", 
+                "limit": 5,
+                "detailed": True
+            })
+            print(f"✅ Retrieve successful: {retrieve_result}")
+        except Exception as e:
+            print(f"❌ Retrieve error: {e}")
+            
+        # Try with invalid type
+        try:
+            invalid_retrieve = await broker.call("validators.retrieve", {
+                "id": "item1", 
+                "limit": "5",  # Should be a number
+                "detailed": True
+            })
+            print(f"❌ Invalid retrieve didn't fail: {invalid_retrieve}")
+        except Exception as e:
+            print(f"✅ Expected error on invalid type: {e}")
+            
+        print("\nTesting complex validation (register):")
+        try:
+            register_result = await broker.call("validators.register", {
+                "user": {
+                    "name": "John Smith",
+                    "email": "john.smith@example.com",
+                    "age": 28,
+                    "preferences": {"theme": "dark", "notifications": True}
+                },
+                "role": "admin",
+                "permissions": ["read", "write", "delete"]
+            })
+            print(f"✅ Register successful: {register_result}")
+        except Exception as e:
+            print(f"❌ Register error: {e}")
+            
+        # Try with invalid data
+        try:
+            invalid_register = await broker.call("validators.register", {
+                "user": {
+                    "name": "Jo",  # Too short, should be min 3 chars
+                    "email": "invalid-email",  # Invalid email format
+                    "age": 16  # Too young, should be >= 18
+                },
+                "role": "superuser"  # Invalid role
+            })
+            print(f"❌ Invalid register didn't fail: {invalid_register}")
+        except Exception as e:
+            print(f"✅ Expected error on invalid register: {e}")
         
     except Exception as e:
         print(f"Error: {e}")
