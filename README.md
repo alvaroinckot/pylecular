@@ -30,6 +30,84 @@ pip install -e .
 
 ## Usage
 
+### Basic Usage - Python API
+
+```python
+import asyncio
+from pylecular.broker import Broker
+from pylecular.service import Service
+from pylecular.decorators import action
+from pylecular.context import Context
+
+# Define a service
+class GreeterService(Service):
+    name = "greeter"
+    
+    def __init__(self):
+        super().__init__(self.name)
+    
+    @action(params=["name"])
+    async def hello(self, ctx: Context):
+        name = ctx.params.get("name", "World")
+        return f"Hello, {name}!"
+
+async def main():
+    # Create a broker
+    broker = Broker("my-node")
+    
+    # Register the service
+    broker.register(GreeterService())
+    
+    # Start the broker
+    await broker.start()
+    
+    # Make a call
+    result = await broker.call("greeter.hello", {"name": "John"})
+    print(result)  # Outputs: Hello, John!
+    
+    # Wait for termination
+    await broker.wait_for_shutdown()
+
+# Run the main function
+asyncio.run(main())
+```
+
+### Command Line Interface
+
+Pylecular includes a command line interface (CLI) that allows you to easily start a broker and load services from a directory:
+
+```bash
+pylecular <service_directory> [options]
+```
+
+#### CLI Options
+
+- `service_directory`: Path to the directory containing service files
+- `--broker-id, -b`: Broker ID (default: node-<current_dir_name>)
+- `--transporter, -t`: Transporter URL (default: nats://localhost:4222)
+- `--log-level, -l`: Log level (default: INFO)
+- `--log-format, -f`: Log format (options: PLAIN, JSON) (default: PLAIN)
+- `--namespace, -n`: Service namespace (default: default)
+
+#### Example:
+
+```bash
+# Start a broker with services from the 'services' directory
+pylecular services
+
+# Start with a custom broker ID and transporter
+pylecular services -b my-broker -t nats://nats-server:4222
+
+# Use verbose logging
+pylecular services -l DEBUG
+```
+
+The CLI will:
+1. Start a broker
+2. Import and register all services found in the specified directory
+3. Wait for requests 
+4. Gracefully shut down on SIGINT or SIGTERM signals (Ctrl+C)
+
 Here is a basic example of how to use Pylecular:
 
 For more complete examples, check the `/examples` folder in the repository:

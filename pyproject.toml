@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pylecular"
-version = "0.1.6"
+version = "0.1.7"
 description = "Python Moleculer Library"
 authors = [
     { name = "Alvaro Inckot", email = "alvaroinckot@gmail.com" }
@@ -16,6 +16,9 @@ dependencies = [
     "structlog>=25.3.0",
     "psutil>=7.0.0"
 ]
+
+[project.scripts]
+pylecular = "pylecular.cli:main"
 
 [project.optional-dependencies]
 test = [
