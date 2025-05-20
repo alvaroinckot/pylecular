@@ -97,8 +97,14 @@ class Broker:
         endpoint = self.registry.get_action(action_name)
         context = self.lifecycle.create_context(action=action_name, params=params, meta=meta)
         if endpoint and endpoint.is_local:
-            return await endpoint.handler(context)
+            try:
+                return await endpoint.handler(context)
+            except Exception as e:
+                # Local errors are propagated directly
+                self.logger.error(f"Error in local action {action_name}: {str(e)}")
+                raise e
         elif endpoint and not endpoint.is_local:
+            # Remote errors will be handled in transit.request
             return await self.transit.request(endpoint, context)
         else:
             raise Exception(f"Action {action_name} not found.")

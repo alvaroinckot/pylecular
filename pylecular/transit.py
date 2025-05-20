@@ -118,9 +118,20 @@ class Transit:
                     "success": True,
                     "meta": {}
                 }
-                await self.publish(Packet(Topics.RESPONSE, packet.target, response))
             except Exception as e:
-                self.logger.error(f"Failed call to {endpoint.name}.", e)
+                import traceback
+                self.logger.error(f"Failed call to {endpoint.name}: {str(e)}")
+                response = {
+                    "id": context.id,
+                    "error": {
+                        "name": e.__class__.__name__,
+                        "message": str(e),
+                        "stack": traceback.format_exc()
+                    },
+                    "success": False,
+                    "meta": {}
+                }
+            await self.publish(Packet(Topics.RESPONSE, packet.target, response))
 
     async def response_handler(self, packet: Packet):
         req_id = packet.payload.get("id")
@@ -135,11 +146,23 @@ class Transit:
         await self.publish(Packet(Topics.REQUEST, endpoint.node_id, context.marshall()))
         try:
             response = await asyncio.wait_for(future, 5000) # TODO: fetch timeout from settings
+            if not response.get("success", True):
+                error_data = response.get("error", {})
+                error_msg = error_data.get("message", "Unknown error")
+                error_name = error_data.get("name", "RemoteError")
+                error_stack = error_data.get("stack")
+                
+                # Recreate an exception with the remote error information
+                exception = Exception(f"{error_name}: {error_msg}")
+                if error_stack:
+                    self.logger.error(f"Remote error stack: {error_stack}")
+                
+                raise exception
+                
             return response.get("data")
         except asyncio.TimeoutError:
             self._pending_requests.pop(req_id, None)
-            # Optionally log or raise a custom exception
-            return None
+            raise Exception(f"Request to {endpoint.name} timed out")
         
 
     async def send_event(self, endpoint, context):

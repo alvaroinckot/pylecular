@@ -187,3 +187,35 @@ async def test_wait_for_services_found_remotely(broker, mock_registry, mock_node
     remote_node.services = [{"name": "test"}]
     mock_node_catalog.nodes.values.return_value = [remote_node]
     await broker.wait_for_services(["test"])
+
+@pytest.mark.asyncio
+async def test_broker_call_local_action_with_error(broker, mock_registry, mock_lifecycle):
+    # Set up a mock endpoint that raises an exception
+    endpoint = Mock(is_local=True)
+    endpoint.handler = AsyncMock(side_effect=ValueError("Test error"))
+    mock_registry.get_action.return_value = endpoint
+    
+    context = Mock()
+    mock_lifecycle.create_context.return_value = context
+    
+    # Verify that the error is propagated
+    with pytest.raises(ValueError, match="Test error"):
+        await broker.call("test.error")
+    
+    mock_registry.get_action.assert_called_once_with("test.error")
+    endpoint.handler.assert_called_once_with(context)
+
+@pytest.mark.asyncio
+async def test_broker_call_remote_action_with_error(broker, mock_registry, mock_transit, mock_lifecycle):
+    endpoint = Mock(is_local=False, node_id="remote-node", name="remote.action")
+    mock_registry.get_action.return_value = endpoint
+    mock_transit.request.side_effect = Exception("RemoteError: Test error")
+    
+    context = Mock()
+    mock_lifecycle.create_context.return_value = context
+
+    # Verify that the remote error is propagated
+    with pytest.raises(Exception, match="RemoteError: Test error"):
+        await broker.call("remote.error")
+    
+    mock_transit.request.assert_called_once_with(endpoint, context)
