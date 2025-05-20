@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-import sys
-import os
 import asyncio
+import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # Add pylecular to path
 
-from pylecular.context import Context
-from pylecular.service import Service
-from pylecular.decorators import action, event
 from pylecular.broker import Broker
+from pylecular.context import Context
+from pylecular.decorators import action
+from pylecular.service import Service
 
 
 class ErrorService(Service):

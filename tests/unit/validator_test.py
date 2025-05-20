@@ -1,5 +1,6 @@
 import pytest
-from pylecular.validator import validate_params, validate_param_rule, ValidationError, validate_type
+
+from pylecular.validator import ValidationError, validate_param_rule, validate_params, validate_type
 
 
 def test_validate_type():

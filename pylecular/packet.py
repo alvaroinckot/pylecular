@@ -1,5 +1,6 @@
 from enum import Enum
-import string
+
+
 
 class Topics(Enum):
     HEARTBEAT = "HEARTBEAT"
@@ -12,13 +13,13 @@ class Topics(Enum):
 
 
 class Packet:
-    def __init__(self, type: string, target, payload):
+    def __init__(self, type: str, target, payload):
         self.type = type
         self.target = target
         self.payload = payload
 
 
     @staticmethod
-    def from_topic(topic: string):
+    def from_topic(topic: str) -> Topics:
         parts = topic.split(".")
         return Topics(parts[1]) # TODO: ensure and test

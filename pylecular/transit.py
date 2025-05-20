@@ -1,13 +1,19 @@
 
 import asyncio
-from pylecular.node import Node
-from pylecular.transporter.base import Transporter
-from pylecular.packet import Packet, Topics
+from typing import Any
+
 import psutil
+
+from pylecular.lifecycle import Lifecycle
+from pylecular.node import Node, NodeCatalog
+from pylecular.packet import Packet, Topics
+from pylecular.registry import Registry
+from pylecular.settings import Settings
+from pylecular.transporter.base import Transporter
 
 
 class Transit:
-    def __init__(self, node_id=None, registry=None, node_catalog=None, settings=None, logger=None, lifecycle=None):
+    def __init__(self, node_id: str, registry: Registry, node_catalog: NodeCatalog, settings: Settings, logger: Any, lifecycle: Lifecycle):
         self.node_id = node_id
         self.registry = registry
         self.node_catalog = node_catalog
@@ -54,7 +60,7 @@ class Transit:
 
         
     async def disconnect(self):
-        await self.publish(Packet(Topics.DISCONNECT, None, {}))
+        await self.publish(Packet(Topics.DISCONNECT.value, None, {}))
         for future in self._pending_requests.values():
             if not future.done():
                 future.cancel()
@@ -66,7 +72,7 @@ class Transit:
 
 
     async def discover(self):
-        await self.publish(Packet(Topics.DISCOVER, None, {}))
+        await self.publish(Packet(Topics.DISCOVER.value, None, {}))
 
 
     async def beat(self):
@@ -74,10 +80,13 @@ class Transit:
             "cpu": psutil.cpu_percent(interval=1),
 
         }
-        await self.publish(Packet(Topics.HEARTBEAT, None, heartbeat))
+        await self.publish(Packet(Topics.HEARTBEAT.value, None, heartbeat))
 
     async def send_node_info(self):
-        await self.publish(Packet(Topics.INFO, None, self.node_catalog.local_node.get_info()))
+        if self.node_catalog.local_node is None:
+            self.logger.error("Local node is not initialized")
+            return
+        await self.publish(Packet(Topics.INFO.value, None, self.node_catalog.local_node.get_info()))
 
 
     async def discover_handler(self, packet: Packet):
@@ -91,14 +100,14 @@ class Transit:
         node = Node(
             id=packet.payload.get("id"),
             **{k: v for k, v in packet.payload.items() if k != "id"})
-        self.node_catalog.add_node(packet.target, node)
+        self.node_catalog.add_node(packet.payload.get("sender"), node)
 
     async def disconnect_handler(self, packet: Packet):
         self.node_catalog.disconnect_node(packet.target)
 
     async def event_handler(self,packet: Packet):
         endpoint = self.registry.get_event(packet.payload.get("event"))
-        if endpoint and endpoint.is_local:
+        if endpoint and endpoint.is_local and endpoint.handler:
             context = self.lifecycle.rebuild_context(packet.payload)
             try:
                 await endpoint.handler(context)
@@ -113,13 +122,16 @@ class Transit:
             try:
                 # Validate parameters if schema is defined
                 if endpoint.params_schema:
-                    from pylecular.validator import validate_params, ValidationError
+                    from pylecular.validator import ValidationError, validate_params
                     try:
                         validate_params(context.params, endpoint.params_schema)
                     except ValidationError as ve:
                         raise ve  # Re-raise the validation error to be caught below
                 
-                result = await endpoint.handler(context)
+                if endpoint.handler:
+                    result = await endpoint.handler(context)
+                else:
+                    raise Exception(f"No handler defined for action {packet.payload.get('action')}")
                 response = {
                     "id": context.id,
                     "data": result,
@@ -128,7 +140,7 @@ class Transit:
                 }
             except Exception as e:
                 import traceback
-                self.logger.error(f"Failed call to {endpoint.name}: {str(e)}")
+                self.logger.error(f"Failed call to {endpoint.name}: {e!s}")
                 response = {
                     "id": context.id,
                     "error": {
@@ -139,7 +151,7 @@ class Transit:
                     "success": False,
                     "meta": {}
                 }
-            await self.publish(Packet(Topics.RESPONSE, packet.target, response))
+            await self.publish(Packet(Topics.RESPONSE.value, packet.target, response))
 
     async def response_handler(self, packet: Packet):
         req_id = packet.payload.get("id")
@@ -151,7 +163,7 @@ class Transit:
         req_id = context.id
         future = asyncio.get_running_loop().create_future()
         self._pending_requests[req_id] = future
-        await self.publish(Packet(Topics.REQUEST, endpoint.node_id, context.marshall()))
+        await self.publish(Packet(Topics.REQUEST.value, endpoint.node_id, context.marshall()))
         try:
             response = await asyncio.wait_for(future, 5000) # TODO: fetch timeout from settings
             if not response.get("success", True):
@@ -168,12 +180,12 @@ class Transit:
                 raise exception
                 
             return response.get("data")
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as err:
             self._pending_requests.pop(req_id, None)
-            raise Exception(f"Request to {endpoint.name} timed out")
+            raise Exception(f"Request to {endpoint.name} timed out") from err
         
 
     async def send_event(self, endpoint, context):
-        await self.publish(Packet(Topics.EVENT, endpoint.node_id, context.marshall()))
+        await self.publish(Packet(Topics.EVENT.value, endpoint.node_id, context.marshall()))
 
 

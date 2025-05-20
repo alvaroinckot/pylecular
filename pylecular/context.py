@@ -1,7 +1,9 @@
 
+from typing import Any, Dict
+
 class Context:
     # TODO: support stream
-    def __init__(self, id, action=None, event=None, parent_id=None, params={}, meta={}, stream=False, broker=None):
+    def __init__(self, id, action=None, event=None, parent_id=None, params={}, meta={}, stream=False, broker: Any=None):
         self.id = id
         self.action = action
         self.event = event
@@ -39,7 +41,7 @@ class Context:
             "stream": self.stream,
         }
 
-    async def _prepare_meta(self, meta={}):
+    async def _prepare_meta(self, meta={}) -> Dict:
         return {**self.meta, **meta}
 
     async def call(self, service_name, params={}, meta={}):

@@ -1,6 +1,6 @@
-from pylecular.service import Service
 from pylecular.context import Context
 from pylecular.decorators import action, event
+from pylecular.service import Service
 
 
 class ValidationService(Service):

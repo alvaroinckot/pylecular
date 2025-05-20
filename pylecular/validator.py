@@ -118,7 +118,7 @@ def validate_param_rule(name, value, rule):
     # String validations
     if rule["type"] == "string":
         # Min length
-        if "minLength" in rule and len(value) < rule["minLength"]:
+        if "minLength" in rule and len(value) < int(rule["minLength"]):
             raise ValidationError(
                 f"Parameter '{name}' must have a minimum length of {rule['minLength']}",
                 field=name,
@@ -128,7 +128,7 @@ def validate_param_rule(name, value, rule):
             )
         
         # Max length
-        if "maxLength" in rule and len(value) > rule["maxLength"]:
+        if "maxLength" in rule and len(value) > int(rule["maxLength"]):
             raise ValidationError(
                 f"Parameter '{name}' must have a maximum length of {rule['maxLength']}",
                 field=name,
@@ -152,7 +152,7 @@ def validate_param_rule(name, value, rule):
     # Array validations
     if rule["type"] == "array":
         # Min items
-        if "minItems" in rule and len(value) < rule["minItems"]:
+        if "minItems" in rule and len(value) < int(rule["minItems"]):
             raise ValidationError(
                 f"Parameter '{name}' must have a minimum of {rule['minItems']} items",
                 field=name,
@@ -162,7 +162,7 @@ def validate_param_rule(name, value, rule):
             )
         
         # Max items
-        if "maxItems" in rule and len(value) > rule["maxItems"]:
+        if "maxItems" in rule and len(value) > int(rule["maxItems"]):
             raise ValidationError(
                 f"Parameter '{name}' must have a maximum of {rule['maxItems']} items",
                 field=name,
@@ -184,7 +184,7 @@ def validate_param_rule(name, value, rule):
                         type=e.type,
                         expected=e.expected,
                         got=e.got
-                    )
+                    ) from e
     
     # Enum validation (value must be one of the specified values)
     if "enum" in rule and value not in rule["enum"]:
@@ -228,11 +228,13 @@ def validate_params(params, schema):
         # First, check required parameters
         for param_name, param_rule in schema.items():
             # Convert simple string rule to dict form
-            if isinstance(param_rule, str):
-                param_rule = {"type": param_rule}
+            rule = param_rule
+            if isinstance(rule, str):
+                rule = {"type": rule}
             
             # Check if required
-            if param_rule.get("required", False) and param_name not in params:
+            if (isinstance(param_rule, dict) and param_rule.get("required", False) 
+                and param_name not in params):
                 raise ValidationError(
                     f"Parameter '{param_name}' is required",
                     field=param_name

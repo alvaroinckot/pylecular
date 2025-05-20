@@ -1,8 +1,8 @@
-from pylecular.service import Service
+import time
+
 from pylecular.context import Context
 from pylecular.decorators import action, event
-import asyncio
-import time
+from pylecular.service import Service
 
 
 class MonitorService(Service):

@@ -1,14 +1,17 @@
+from unittest.mock import AsyncMock, Mock
+
 import pytest
 import pytest_asyncio
-from unittest.mock import Mock, AsyncMock
+
 from pylecular.broker import Broker
-from pylecular.settings import Settings
-from pylecular.service import Service
 from pylecular.decorators import action, event
-from pylecular.transit import Transit
-from pylecular.registry import Registry
-from pylecular.node import NodeCatalog
 from pylecular.lifecycle import Lifecycle
+from pylecular.node import NodeCatalog
+from pylecular.registry import Registry
+from pylecular.service import Service
+from pylecular.settings import Settings
+from pylecular.transit import Transit
+
 
 class TestService(Service):
     def __init__(self):

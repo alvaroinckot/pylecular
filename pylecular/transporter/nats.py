@@ -1,7 +1,11 @@
-from .base import Transporter
-from pylecular.packet import Packet
-import nats
 import json
+
+import nats
+from typing import Any
+from pylecular.packet import Packet
+
+from .base import Transporter
+
 
 class NatsTransporter(Transporter):
     name = "nats"
@@ -12,7 +16,7 @@ class NatsTransporter(Transporter):
         self.transit = transit
         self.handler = handler
         self.node_id = node_id
-        self.nc = None
+        self.nc : Any = None
 
     # TODO: maybe move it to base class
     # TODO: user real world serializer
@@ -32,10 +36,13 @@ class NatsTransporter(Transporter):
         type = Packet.from_topic(msg.subject)
         sender = data.get("sender")
         packet = Packet(type, sender, data)
-        await self.handler(packet)
+        if self.handler:
+            await self.handler(packet)
+        else:
+            raise ValueError("Message received but no handler is defined")
 
     async def publish(self, packet: Packet):
-        topic = self.get_topic_name(packet.type.value, packet.target) 
+        topic = self.get_topic_name(packet.type, packet.target) 
         await self.nc.publish(topic, self._serialize(packet.payload))
 
     async def connect(self):
@@ -50,7 +57,7 @@ class NatsTransporter(Transporter):
         topic = self.get_topic_name(command, node_id)
         if self.handler is None:
             raise ValueError("Handler must be provided for subscription.")
-        if not callable(self.message_handler) or not hasattr(self.message_handler, "__call__") or not hasattr(self.message_handler, "__code__") or not self.message_handler.__code__.co_flags & 0x80:
+        if not callable(self.message_handler) or not callable(self.message_handler) or not hasattr(self.message_handler, "__code__") or not self.message_handler.__code__.co_flags & 0x80:
             raise ValueError("Handler must be an async function.")
         await self.nc.subscribe(topic, cb=self.message_handler)
     

@@ -26,8 +26,68 @@ test = [
     "pytest-asyncio>=0.26.0"
 ]
 
+dev = [
+    "ruff>=0.1.9",
+    "mypy>=1.5.1",
+    "pre-commit>=3.5.0",
+]
+
 [tool.pytest.ini_options]
 addopts = "-ra -q"
 testpaths = [
     "tests",
 ]
+
+[tool.ruff]
+# Line length
+line-length = 100
+
+# Python target version
+target-version = "py38"
+
+# Exclude files and directories
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+# Enable flake8-bugbear, pydocstyle, isort, and other linters
+select = ["E", "F", "B", "I", "N", "UP", "ANN", "PL", "RUF"]
+# Ignore specific rules
+ignore = [
+    "ANN401",  # Disable "Dynamically typed expressions (typing.Any) are disallowed"
+    "E501",    # Disable "Line too long"
+    "B006",    # Temporarily disable "Do not use mutable data structures for argument defaults"
+    "B008",    # Temporarily disable "Do not perform function calls in argument defaults"
+    "PLR0913", # Temporarily disable "Too many arguments in function definition"
+    "PLR0912", # Temporarily disable "Too many branches"
+    "PLR0915", # Temporarily disable "Too many statements"
+    "PLR0911", # Temporarily disable "Too many return statements"
+]
+
+# Allow autofix for all enabled rules
+fixable = ["ALL"]
+unfixable = []
+
+# Import sorting configuration
+[tool.ruff.lint.isort]
+known-first-party = ["pylecular"]
+
+# Per-file ignores
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/**/*.py" = ["ANN", "PLR2004", "E402"] 
+"examples/**/*.py" = ["E402", "ANN", "N806", "F841", "PLR0915"]
+"pylecular/**/*.py" = ["ANN204", "ANN001", "ANN201", "N803"] # Temp: Disable annotations for now
+
+# Mypy configuration for type checking
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false

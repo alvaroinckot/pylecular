@@ -1,12 +1,14 @@
 import asyncio
 import signal
+
 from pylecular.discoverer import Discoverer
 from pylecular.lifecycle import Lifecycle
+from pylecular.logger import get_logger
 from pylecular.node import NodeCatalog
-from pylecular.registry import Registry 
+from pylecular.registry import Registry
 from pylecular.settings import Settings
 from pylecular.transit import Transit
-from pylecular.logger import get_logger
+
 
 class Broker:
     def __init__(self, 
@@ -55,7 +57,7 @@ class Broker:
         loop = asyncio.get_event_loop()
         shutdown_event = asyncio.Event()
 
-        def signal_handler():
+        def signal_handler() -> None:
             shutdown_event.set()
 
         for sig in (signal.SIGINT, signal.SIGTERM):
@@ -100,16 +102,18 @@ class Broker:
             try:
                 # Validate parameters if schema is defined
                 if endpoint.params_schema:
-                    from pylecular.validator import validate_params, ValidationError
+                    from pylecular.validator import ValidationError, validate_params
                     try:
                         validate_params(context.params, endpoint.params_schema)
                     except ValidationError as ve:
                         raise ve  # Re-raise the validation error to be caught below
                 
+                if endpoint.handler is None:
+                    raise Exception(f"Handler for action {action_name} is None.")
                 return await endpoint.handler(context)
             except Exception as e:
                 # Local errors are propagated directly
-                self.logger.error(f"Error in local action {action_name}: {str(e)}")
+                self.logger.error(f"Error in local action {action_name}: {e!s}")
                 raise e
         elif endpoint and not endpoint.is_local:
             # Remote errors will be handled in transit.request
@@ -121,17 +125,19 @@ class Broker:
     async def emit(self, event_name, params={}, meta={}):
         endpoint = self.registry.get_event(event_name)
         context = self.lifecycle.create_context(event=event_name, params=params, meta=meta)
-        if endpoint and endpoint.is_local:
+        if endpoint and endpoint.is_local and endpoint.handler:
             return await endpoint.handler(context)
         elif endpoint and not endpoint.is_local:
             return await self.transit.send_event(endpoint, context)
+        else:
+            raise Exception(f"Event {event_name} not found.")
         
     
     async def broadcast(self, event_name, params={}, meta={}):
         endpoints = self.registry.get_all_events(event_name)
         context = self.lifecycle.create_context(event=event_name, params=params, meta=meta)
         await asyncio.gather(*[
-            endpoint.handler(context) if endpoint.is_local 
+            endpoint.handler(context) if endpoint.is_local and endpoint.handler
             else self.transit.send_event(endpoint, context)
-            for endpoint in endpoints
+            for endpoint in endpoints if endpoint.is_local and endpoint.handler or not endpoint.is_local
         ])

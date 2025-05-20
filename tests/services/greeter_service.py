@@ -1,7 +1,7 @@
-from pylecular.service import Service
+
 from pylecular.context import Context
 from pylecular.decorators import action, event
-import asyncio
+from pylecular.service import Service
 
 
 class GreeterService(Service):

@@ -1,5 +1,7 @@
+from typing import Callable
+
 def action(params=None):
-    def decorator(func):
+    def decorator(func) -> Callable:
         func._is_action = True
         func._params = params
         return func

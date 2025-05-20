@@ -1,5 +1,9 @@
 
+from logging import Logger
 import sys
+
+from pylecular.registry import Registry
+
 
 class Node:
     def __init__(self, id, available=True, local=False, services=None, cpu=0, client=None, ipList=None, hostname=None, config=None, instanceID=None, metadata=None, seq=0, ver=0, sender=None):
@@ -23,7 +27,7 @@ class Node:
         return self.__dict__
 
 class NodeCatalog:
-    def __init__(self, registry=None, logger=None, node_id=None):
+    def __init__(self, registry: Registry, logger: Logger, node_id: str):
         self.nodes = {}
         self.registry = registry
         self.logger = logger
@@ -32,7 +36,7 @@ class NodeCatalog:
         self.ensure_local_node()
 
 
-    def add_node(self, id, node: Node):
+    def add_node(self, id: str, node: Node):
         self.nodes[id] = node
         if self.registry and hasattr(node, "services"):
             for service in node.services:
@@ -63,7 +67,7 @@ class NodeCatalog:
         node = self.get_node(node_id)
         if not node:
             node = Node(node_id)
-            self.add_node(node)
+            self.add_node(node_id, node)
         node.available = True
         node.cpu = payload.get("cpu", 0)
         node.services = payload.get("services", [])

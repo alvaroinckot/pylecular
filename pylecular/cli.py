@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-import os
-import sys
+import argparse
 import asyncio
-import signal
 import importlib.util
 import inspect
+import os
+import sys
 from pathlib import Path
 from typing import List
 
 from pylecular.broker import Broker
 from pylecular.service import Service
 from pylecular.settings import Settings
-import argparse
 
 
 def import_services_from_directory(directory_path: str) -> List[Service]:
