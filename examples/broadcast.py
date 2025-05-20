@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # import pylecular
 from pylecular.context import Context
 from pylecular.service import Service
-from pylecular.decorators import action, event
+from pylecular.decorators import event
 from pylecular.broker import Broker
     
 class MySyservice(Service):

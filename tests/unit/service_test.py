@@ -1,4 +1,3 @@
-import pytest
 from pylecular.service import Service
 from pylecular.decorators import action, event
 
