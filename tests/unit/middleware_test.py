@@ -4,7 +4,7 @@ from pylecular.middleware import Middleware
 from pylecular.broker import Broker
 from pylecular.service import Service # Assuming Service can be imported
 from pylecular.context import Context # Assuming Context can be imported
-from pylecular.registry import ActionEndpoint as Action, EventEndpoint as Event # Corrected based on common patterns
+from pylecular.registry import Action, Event # Changed import
 from pylecular.settings import Settings
 from pylecular.decorators import action, event # Added import for event
 from unittest.mock import AsyncMock, patch # Added for remote action tests
@@ -34,7 +34,7 @@ class TestMiddleware(Middleware):
         # This can be a simple wrapper or duplicate logic if preferred
         self._record_call_sync(hook_name, **kwargs)
 
-    async def local_action(self, next_handler, action):
+    async def local_action(self, next_handler, action: Action): # Updated type hint
         await self._record_call_async("local_action", action=action)
         async def wrapped_handler(ctx):
             ctx.params["local_action_touched_by"] = self.name
@@ -46,7 +46,7 @@ class TestMiddleware(Middleware):
             return res
         return wrapped_handler
 
-    async def remote_action(self, next_handler, action):
+    async def remote_action(self, next_handler, action: Action): # Updated type hint
         await self._record_call_async("remote_action", action=action)
         async def wrapped_handler(ctx):
             ctx.params["remote_action_touched_by"] = self.name
@@ -58,7 +58,7 @@ class TestMiddleware(Middleware):
             return res
         return wrapped_handler
         
-    async def local_event(self, next_handler, event):
+    async def local_event(self, next_handler, event: Event): # Updated type hint
         await self._record_call_async("local_event", event=event)
         async def wrapped_handler(ctx):
             if ctx.params is None: ctx.params = {} # Ensure params is a dict
