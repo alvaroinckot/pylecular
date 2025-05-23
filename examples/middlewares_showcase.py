@@ -172,9 +172,9 @@ async def main():
     print(f"Action call final result received by caller: {action_result}\n")
 
     # Emit event
-    print("--- Emitting 'greeter.item_updated' event ---")
+    print("--- Emitting 'item_updated' event ---")
     event_params = {"item_id": "book-123", "status": "sold"}
-    await broker.emit("greeter.item_updated", params=event_params)
+    await broker.emit("item_updated", params=event_params)
     print("\nEvent emitted.")
 
     print("\n--- Stopping Broker ---")

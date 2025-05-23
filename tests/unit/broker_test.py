@@ -163,7 +163,7 @@ async def test_broker_emit_remote_event(broker, mock_registry, mock_transit, moc
     context = Mock()
     mock_lifecycle.create_context.return_value = context
 
-    await broker.emit("remote.event")
+    await broker.emit("event_name")  # Using unprefixed event name
 
     mock_transit.send_event.assert_called_once_with(endpoint, context)
 

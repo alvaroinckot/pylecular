@@ -72,7 +72,7 @@ async def main():
     broker = Broker("validation-example")
 
     # Register our service with parameter validation
-    broker.register(ValidationService())
+    await broker.register(ValidationService())
 
     # Start the broker
     print("Starting broker...")

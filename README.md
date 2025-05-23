@@ -56,7 +56,7 @@ async def main():
     broker = Broker("my-node")
 
     # Register the service
-    broker.register(GreeterService())
+    await broker.register(GreeterService())
 
     # Start the broker
     await broker.start()
@@ -142,7 +142,7 @@ class MathService(Service):
      def calculation_done_handler(self, ctx):
           print(f"Calculation done: {ctx.params}")
 
-broker.register(MathService())
+await broker.register(MathService())
 
 await broker.start()
 

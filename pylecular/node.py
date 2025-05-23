@@ -1,7 +1,7 @@
 import sys
 from logging import Logger
 
-from pylecular.registry import Registry
+from pylecular.registry import Action, Event, Registry
 
 
 class Node:
@@ -57,10 +57,14 @@ class NodeCatalog:
             for service in node.services:
                 actions = service.get("actions", {})
                 for action_name in actions:
-                    self.registry.add_action(action_name, id)
+                    # Create an Action object instead of passing separate parameters
+                    action_obj = Action(name=action_name, node_id=id, is_local=False)
+                    self.registry.add_action(action_obj)
                 events = service.get("events", {})
-                for event in events:
-                    self.registry.add_event(event, id)
+                for event_name in events:
+                    # Create an Event object instead of passing separate parameters
+                    event_obj = Event(name=event_name, node_id=id, is_local=False)
+                    self.registry.add_event_obj(event_obj)
         self.logger.info(f'Node "{id}" added.')
 
     def get_node(self, id):

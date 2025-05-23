@@ -49,7 +49,7 @@ def import_services_from_directory(directory_path: str) -> List[Service]:
             for name, obj in inspect.getmembers(module):
                 if inspect.isclass(obj) and issubclass(obj, Service) and obj != Service:
                     try:
-                        service_instance = obj()
+                        service_instance = obj()  # type: ignore
                         services.append(service_instance)
                         print(f"Found service: {service_instance.name}")
                     except Exception as e:
@@ -88,7 +88,7 @@ async def run_broker(
         else:
             print(f"Registering {len(services)} service(s):")
             for service in services:
-                broker.register(service)
+                await broker.register(service)
                 print(f"  - {service.name}")
 
         # Start the broker

@@ -46,7 +46,7 @@ class Registry:
         self.__events__.extend(
             [
                 Event(
-                    f"{service.name}.{getattr(getattr(service, event), '_name', event)}",
+                    getattr(getattr(service, event), "_name", event),
                     self.__node_id__,
                     is_local=True,
                     handler=getattr(service, event),
@@ -72,8 +72,22 @@ class Registry:
         self.__actions__.append(action_obj)
 
     def add_event(self, name, node_id):
+        """Add an event to the registry.
+
+        Args:
+            name: Event name.
+            node_id: Node ID.
+        """
         event = Event(name, node_id, is_local=False)
         self.__events__.append(event)
+
+    def add_event_obj(self, event_obj):
+        """Add an event object to the registry.
+
+        Args:
+            event_obj: An Event object with name, node_id, etc.
+        """
+        self.__events__.append(event_obj)
 
     def get_action(self, name) -> Optional[Action]:
         action = [a for a in self.__actions__ if a.name == name]

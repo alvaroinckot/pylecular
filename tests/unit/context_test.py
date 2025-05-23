@@ -114,10 +114,10 @@ async def test_emit(context, mock_broker):
     params = {"param_key": "param_value"}
     meta = {"meta_key": "new_meta_value"}
 
-    result = await context.emit("service.event", params, meta)
+    result = await context.emit("event", params, meta)
 
     assert result == "emit_result"
-    mock_broker.emit.assert_called_once_with("service.event", {"param_key": "param_value"})
+    mock_broker.emit.assert_called_once_with("event", {"param_key": "param_value"})
 
 
 @pytest.mark.asyncio
@@ -125,10 +125,10 @@ async def test_broadcast(context, mock_broker):
     params = {"param_key": "param_value"}
     meta = {"meta_key": "new_meta_value"}
 
-    result = await context.broacast("service.event", params, meta)
+    result = await context.broacast("event", params, meta)
 
     assert result == "broadcast_result"
-    mock_broker.broadcast.assert_called_once_with("service.event", {"param_key": "param_value"})
+    mock_broker.broadcast.assert_called_once_with("event", {"param_key": "param_value"})
 
 
 @pytest.mark.asyncio

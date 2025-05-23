@@ -422,22 +422,20 @@ async def test_local_event_emit_single_middleware():
     mw1.called_hooks.clear()
 
     event_params = {"username": "testuser", "id": 1}
-    await broker.emit("emitter.user_created", params=event_params.copy())
+    await broker.emit("user_created", params=event_params.copy())
 
     assert len(mw1.called_hooks) == 1
     hook_call = mw1.called_hooks[0]
     assert hook_call["hook"] == "local_event"
-    assert (
-        hook_call["event_name"] == "emitter.user_created"
-    )  # Check based on TestMiddleware recording
+    assert hook_call["event_name"] == "user_created"  # Updated to match the new behavior
 
     # Check context modification seen by the event handler
     assert len(service.event_params_log) == 1
     logged_params = service.event_params_log[0]
     assert logged_params.get("local_event_touched_by") == "MW1_EventEmit"
 
-    assert "MW1_EventEmit: local_event_before_emitter.user_created" in mw1.call_log
-    assert "MW1_EventEmit: local_event_after_emitter.user_created" in mw1.call_log
+    assert "MW1_EventEmit: local_event_before_user_created" in mw1.call_log
+    assert "MW1_EventEmit: local_event_after_user_created" in mw1.call_log
 
     await broker.stop()
 
@@ -458,7 +456,7 @@ async def test_local_event_emit_multiple_middlewares_chaining():
     mw2.called_hooks.clear()
 
     event_params = {"username": "chainuser", "id": 2}
-    await broker.emit("emitter.user_created", params=event_params.copy())
+    await broker.emit("user_created", params=event_params.copy())
 
     # Hook call order (wrapper entry): MW1 -> MW2 (actually MW2 then MW1 due to reversed iteration)
     # The TestMiddleware records its call when its hook method (e.g., local_event) is entered.
@@ -477,10 +475,10 @@ async def test_local_event_emit_multiple_middlewares_chaining():
     assert logged_params.get("local_event_touched_by") == "MW2_EventEmitChain"
 
     # Call log order (execution of the wrappers)
-    assert mw1.call_log[0] == "MW1_EventEmitChain: local_event_before_emitter.user_created"
-    assert mw2.call_log[0] == "MW2_EventEmitChain: local_event_before_emitter.user_created"
-    assert mw2.call_log[1] == "MW2_EventEmitChain: local_event_after_emitter.user_created"
-    assert mw1.call_log[1] == "MW1_EventEmitChain: local_event_after_emitter.user_created"
+    assert mw1.call_log[0] == "MW1_EventEmitChain: local_event_before_user_created"
+    assert mw2.call_log[0] == "MW2_EventEmitChain: local_event_before_user_created"
+    assert mw2.call_log[1] == "MW2_EventEmitChain: local_event_after_user_created"
+    assert mw1.call_log[1] == "MW1_EventEmitChain: local_event_after_user_created"
 
     await broker.stop()
 
@@ -501,8 +499,8 @@ async def test_local_event_broadcast_multiple_handlers_and_middlewares():
     mw2.called_hooks.clear()
 
     event_params = {"data": "broadcast_data"}
-    # Use the correct fully qualified event name including service name
-    await broker.broadcast("emitter.multi.handler.event", params=event_params.copy())
+    # Using unprefixed event name
+    await broker.broadcast("multi.handler.event", params=event_params.copy())
 
     # Each handler will trigger the middleware chain.
     # So, each middleware's local_event hook will be called twice (once for each handler).
@@ -514,8 +512,8 @@ async def test_local_event_broadcast_multiple_handlers_and_middlewares():
     assert mw2.called_hooks[1]["hook"] == "local_event"
 
     # Event names should match for all calls
-    assert mw1.called_hooks[0]["event_name"] == "emitter.multi.handler.event"
-    assert mw2.called_hooks[0]["event_name"] == "emitter.multi.handler.event"
+    assert mw1.called_hooks[0]["event_name"] == "multi.handler.event"
+    assert mw2.called_hooks[0]["event_name"] == "multi.handler.event"
 
     # Context modification: Each handler should see context modified by MW2.
     assert len(service.event_params_log) == 2
@@ -525,20 +523,10 @@ async def test_local_event_broadcast_multiple_handlers_and_middlewares():
     # Call log: Each middleware's before/after logs will appear twice.
     # Example: MW1_before, MW2_before, MW2_after, MW1_after (for handler1)
     #          MW1_before, MW2_before, MW2_after, MW1_after (for handler2)
-    assert (
-        mw1.call_log.count("MW1_EventBroadcast: local_event_before_emitter.multi.handler.event")
-        == 2
-    )
-    assert (
-        mw2.call_log.count("MW2_EventBroadcast: local_event_before_emitter.multi.handler.event")
-        == 2
-    )
-    assert (
-        mw2.call_log.count("MW2_EventBroadcast: local_event_after_emitter.multi.handler.event") == 2
-    )
-    assert (
-        mw1.call_log.count("MW1_EventBroadcast: local_event_after_emitter.multi.handler.event") == 2
-    )
+    assert mw1.call_log.count("MW1_EventBroadcast: local_event_before_multi.handler.event") == 2
+    assert mw2.call_log.count("MW2_EventBroadcast: local_event_before_multi.handler.event") == 2
+    assert mw2.call_log.count("MW2_EventBroadcast: local_event_after_multi.handler.event") == 2
+    assert mw1.call_log.count("MW1_EventBroadcast: local_event_after_multi.handler.event") == 2
 
     await broker.stop()
 

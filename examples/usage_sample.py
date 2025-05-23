@@ -43,7 +43,7 @@ async def main():
 
     mysvc = MySyservice()
 
-    broker.register(mysvc)
+    await broker.register(mysvc)
 
     await broker.start()
 
