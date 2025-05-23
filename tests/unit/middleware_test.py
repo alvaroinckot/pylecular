@@ -1,5 +1,5 @@
 import asyncio
-from unittest.mock import AsyncMock, patch  # Added for remote action tests
+from unittest.mock import AsyncMock, patch  # Added MagicMock for broker mocks
 
 import pytest
 import pytest_asyncio
@@ -10,6 +10,21 @@ from pylecular.middleware import Middleware
 from pylecular.registry import Action, Event  # Changed import
 from pylecular.service import Service  # Assuming Service can be imported
 from pylecular.settings import Settings
+
+
+# Automatically patch all transit-related operations to avoid network connections
+@pytest.fixture(autouse=True)
+def mock_transit_operations():
+    """
+    This fixture automatically patches all transit-related operations for every test.
+    It ensures no actual network connections are made during testing.
+    """
+    with patch("pylecular.transit.Transit.connect", new_callable=AsyncMock), patch(
+        "pylecular.transit.Transit.disconnect", new_callable=AsyncMock
+    ), patch("pylecular.transit.Transit.request", new_callable=AsyncMock), patch(
+        "pylecular.transit.Transit.publish", new_callable=AsyncMock
+    ):
+        yield
 
 
 class TestMiddleware(Middleware):
@@ -54,6 +69,8 @@ class TestMiddleware(Middleware):
 
     async def remote_action(self, next_handler, action: Action):  # Updated type hint
         await self._record_call_async("remote_action", action=action)
+        # Create a broker instance with transit operations already mocked by fixture
+        _ = Broker(id="test-broker-mw")
 
         async def wrapped_handler(ctx):
             ctx.params["remote_action_touched_by"] = self.name
@@ -144,35 +161,26 @@ class EventService(Service):
 
 @pytest_asyncio.fixture
 async def broker_instance():
-    # Mock the transit disconnect to avoid NATS connection issues in tests
-    from unittest.mock import AsyncMock, patch
-
-    with patch("pylecular.transit.Transit.disconnect", new_callable=AsyncMock) as mock_disconnect:
-        broker = Broker(id="test-broker-mw")
-        yield broker
-        # Manually trigger broker_stopped hooks but bypass the actual transit disconnect
-        if hasattr(broker, "middlewares") and broker.middlewares:
-            await asyncio.gather(
-                *[
-                    middleware.broker_stopped(broker)
-                    for middleware in broker.middlewares
-                    if hasattr(middleware, "broker_stopped") and callable(middleware.broker_stopped)
-                ]  # type: ignore
-            )  # type: ignore
+    # Transit methods are already mocked by the mock_transit_operations fixture
+    broker = Broker(id="test-broker-mw")
+    yield broker
+    # Manually trigger broker_stopped hooks but bypass the actual transit disconnect
+    if hasattr(broker, "middlewares") and broker.middlewares:
+        await asyncio.gather(
+            *[
+                middleware.broker_stopped(broker)
+                for middleware in broker.middlewares
+                if hasattr(middleware, "broker_stopped") and callable(middleware.broker_stopped)
+            ]  # type: ignore
+        )  # type: ignore
 
 
-# Also patch the connect method to avoid NATS connection issues when starting the broker
+# This fixture creates a broker with a different ID
+# Transit methods are already mocked by the mock_transit_operations fixture
 @pytest_asyncio.fixture
 async def mocked_broker():
-    from unittest.mock import AsyncMock, patch
-
-    with patch("pylecular.transit.Transit.connect", new_callable=AsyncMock), patch(
-        "pylecular.transit.Transit.disconnect", new_callable=AsyncMock
-    ), patch("pylecular.transit.Transit.request", new_callable=AsyncMock), patch(
-        "pylecular.transit.Transit.publish", new_callable=AsyncMock
-    ):
-        broker = Broker(id="test-broker-mw-mocked")
-        yield broker
+    broker = Broker(id="test-broker-mw-mocked")
+    yield broker
 
 
 def test_broker_registers_middlewares_direct():
@@ -543,7 +551,7 @@ async def test_broker_created_hook():
     mw1.reset()
     mw2.reset()
 
-    broker = Broker(id="broker-created-test", middlewares=[mw1, mw2])
+    _ = Broker(id="broker-created-test", middlewares=[mw1, mw2])
 
     assert len(mw1.called_hooks) == 1
     hook_info1 = mw1.called_hooks[0]
