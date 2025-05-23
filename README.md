@@ -117,7 +117,7 @@ from pylecular.service import Service
 from pylecular.decorators import action, event
 from pylecular.broker import Broker
 
-broker = ServiceBroker("broker-sample") # Note: Should be Broker, not ServiceBroker
+broker = Broker("broker-sample")
 
 class MathService(Service):
     name = "math"
