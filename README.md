@@ -111,9 +111,6 @@ The CLI will:
 Here is a basic example of how to use Pylecular:
 
 For more complete examples, check the `/examples` folder in the repository.
-(The MathService example below seems to have some formatting and content issues compared to the GreeterService example above it, so it might be reviewed or removed in a future cleanup. For now, adding Middlewares section after it.)
-
-
 ```python
 from pylecular.context import Context
 from pylecular.service import Service
@@ -168,20 +165,20 @@ from pylecular.context import Context # For type hinting
 class MyCustomMiddleware(Middleware):
     async def local_action(self, next_handler, action_endpoint):
         print(f"[MyCustomMiddleware] Before action: {action_endpoint.name}")
-        
+
         async def wrapped_handler(ctx: Context):
             # Modify context before action execution
             ctx.meta['my_middleware_was_here'] = True
             print(f"[MyCustomMiddleware] Context meta updated for {action_endpoint.name}")
-            
+
             result = await next_handler(ctx) # Call the next handler in the chain
-            
+
             # Modify result after action execution
             if isinstance(result, dict):
                 result['processed_by_my_middleware'] = True
             print(f"[MyCustomMiddleware] After action: {action_endpoint.name}, Result: {result}")
             return result
-            
+
         return wrapped_handler
 
     def broker_created(self, broker): # This is a synchronous hook

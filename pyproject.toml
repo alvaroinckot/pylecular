@@ -33,10 +33,16 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
+asyncio_mode = "strict"
 addopts = "-ra -q"
-testpaths = [
-    "tests",
-]
+testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "function"
+python_classes = ["!TestService", "!TestMiddleware"]
+
+# This section is already defined above
+# [tool.pytest.ini_options]
+# addopts = "-ra -q"
+# testpaths = ["tests"]
 
 [tool.ruff]
 # Line length
