@@ -7,6 +7,7 @@ for logging, authentication, request/response transformation, error handling, an
 
 Each middleware method provides a specific hook point in the broker or service lifecycle.
 """
+
 from typing import Any, Awaitable, Callable, TypeVar
 
 # Define type variables for better type annotations

@@ -33,11 +33,15 @@ import asyncio
 
 
 async def main():
-    broker = Broker("broker1")
+    broker = Broker("broker_ml")
 
-    broker.register(MLService())
+    svc = MLService()
+
+    await broker.register(svc)
 
     await broker.start()
+
+    await broker.wait_for_services(["ml"])
 
     res = await broker.call("ml.predict", {"x": 4})
 
