@@ -16,10 +16,10 @@ if TYPE_CHECKING:
     from .node import NodeCatalog
     from .registry import Action, Event, Registry
     from .settings import Settings
-    from .transporter.base import Transporter
 
 from .node import Node
 from .packet import Packet, Topic
+from .transporter.base import Transporter
 
 
 class RemoteCallError(Exception):
