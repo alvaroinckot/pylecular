@@ -1,7 +1,25 @@
-class ValidationError(Exception):
-    """Custom exception for parameter validation errors."""
+from typing import Any, Dict, List, Optional, Union
 
-    def __init__(self, message, field=None, type=None, expected=None, got=None):
+
+class ValidationError(Exception):
+    """Custom exception for parameter validation errors.
+
+    Attributes:
+        message: The error message
+        field: The field that failed validation
+        type: The type of validation error
+        expected: The expected value/type
+        got: The actual value/type received
+    """
+
+    def __init__(
+        self,
+        message: str,
+        field: Optional[str] = None,
+        type: Optional[str] = None,
+        expected: Any = None,
+        got: Any = None,
+    ) -> None:
         self.field = field
         self.type = type
         self.expected = expected
@@ -10,8 +28,16 @@ class ValidationError(Exception):
         super().__init__(message)
 
 
-def validate_type(value, expected_type):
-    """Validate if a value is of the expected type."""
+def validate_type(value: Any, expected_type: str) -> bool:
+    """Validate if a value is of the expected type.
+
+    Args:
+        value: The value to validate
+        expected_type: The expected type as a string
+
+    Returns:
+        True if the value matches the expected type, False otherwise
+    """
     if expected_type == "string":
         return isinstance(value, str)
     elif expected_type == "number":
@@ -29,8 +55,20 @@ def validate_type(value, expected_type):
     return False
 
 
-def validate_param_rule(name, value, rule):
-    """Validate a parameter against its rule."""
+def validate_param_rule(name: str, value: Any, rule: Union[str, Dict[str, Any]]) -> bool:
+    """Validate a parameter against its rule.
+
+    Args:
+        name: The parameter name
+        value: The parameter value
+        rule: The validation rule (string type or dict with validation rules)
+
+    Returns:
+        True if validation passes
+
+    Raises:
+        ValidationError: If validation fails
+    """
     # Convert simple string rule to dict form
     if isinstance(rule, str):
         rule = {"type": rule}
@@ -55,7 +93,7 @@ def validate_param_rule(name, value, rule):
             )
 
     # Number validations
-    if rule["type"] == "number":
+    if rule.get("type") == "number":
         # Min value
         if "min" in rule and value < rule["min"]:
             raise ValidationError(
@@ -117,7 +155,7 @@ def validate_param_rule(name, value, rule):
             )
 
     # String validations
-    if rule["type"] == "string":
+    if rule.get("type") == "string":
         # Min length
         if "minLength" in rule and len(value) < int(rule["minLength"]):
             raise ValidationError(
@@ -152,7 +190,7 @@ def validate_param_rule(name, value, rule):
                 )
 
     # Array validations
-    if rule["type"] == "array":
+    if rule.get("type") == "array":
         # Min items
         if "minItems" in rule and len(value) < int(rule["minItems"]):
             raise ValidationError(
@@ -197,16 +235,16 @@ def validate_param_rule(name, value, rule):
     return True
 
 
-def validate_params(params, schema):
+def validate_params(params: Dict[str, Any], schema: Union[Dict[str, Any], List[str]]) -> bool:
     """
     Validate parameters against a schema.
 
     Args:
-        params (dict): The parameters to validate
-        schema (dict or list): The validation schema
+        params: The parameters to validate
+        schema: The validation schema (dict of rules or list of required param names)
 
     Returns:
-        bool: True if validation passes
+        True if validation passes
 
     Raises:
         ValidationError: If validation fails

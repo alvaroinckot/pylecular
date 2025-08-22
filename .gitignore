@@ -24,6 +24,9 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+.ruff_cache/
+.pytest_cache/
+
 
 # PyInstaller
 *.manifest
@@ -90,3 +93,7 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+
+# AI
+.claude/

@@ -37,7 +37,7 @@ asyncio_mode = "strict"
 addopts = "-ra -q"
 testpaths = ["tests"]
 asyncio_default_fixture_loop_scope = "function"
-python_classes = ["!TestService", "!TestMiddleware"]
+python_classes = ["Test*", "!TestService", "!TestMiddleware"]
 
 # This section is already defined above
 # [tool.pytest.ini_options]

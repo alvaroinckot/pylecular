@@ -68,7 +68,7 @@ def test_marshall(context):
 
 
 def test_unmarshall(context):
-    unmarshalled = context.unmarhshall()
+    unmarshalled = context.unmarshall()
     assert unmarshalled == {
         "id": "test-id",
         "action": "test.action",
@@ -125,7 +125,7 @@ async def test_broadcast(context, mock_broker):
     params = {"param_key": "param_value"}
     meta = {"meta_key": "new_meta_value"}
 
-    result = await context.broacast("event", params, meta)
+    result = await context.broadcast("event", params, meta)
 
     assert result == "broadcast_result"
     mock_broker.broadcast.assert_called_once_with("event", {"param_key": "param_value"})
@@ -149,4 +149,4 @@ async def test_emit_without_broker(context):
 async def test_broadcast_without_broker(context):
     context._broker = None
     with pytest.raises(AttributeError):
-        await context.broacast("service.event")
+        await context.broadcast("service.event")
