@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pylecular"
-version = "0.1.14"
+version = "0.1.15"
 description = "Python Moleculer Library"
 authors = [
     { name = "Alvaro Inckot", email = "alvaroinckot@gmail.com" }
 ]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 dependencies = [
     "nats-py>=2.10.0",
     "structlog>=25.3.0",
