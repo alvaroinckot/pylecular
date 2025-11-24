@@ -74,7 +74,6 @@ ignore = [
     "PLR0915", # Temporarily disable "Too many statements"
     "PLR0911", # Temporarily disable "Too many return statements"
     "ANN202",  # Temporarily disable "Self return type"
-    "ANN101"
 ]
 
 # Allow autofix for all enabled rules

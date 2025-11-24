@@ -36,13 +36,13 @@ class TestMiddleware(Middleware):
     # Helper to record hook calls, made synchronous for broader applicability
     def _record_call_sync(self, hook_name, **kwargs):
         entry = {"name": self.name, "hook": hook_name}
-        if "broker" in kwargs and kwargs["broker"]:
+        if kwargs.get("broker"):
             entry["broker_id"] = kwargs["broker"].id
-        if "service" in kwargs and kwargs["service"]:
+        if kwargs.get("service"):
             entry["service_name"] = kwargs["service"].name
-        if "action" in kwargs and kwargs["action"]:
+        if kwargs.get("action"):
             entry["action_name"] = kwargs["action"].name
-        if "event" in kwargs and kwargs["event"]:
+        if kwargs.get("event"):
             entry["event_name"] = kwargs["event"].name
         self.called_hooks.append(entry)
 

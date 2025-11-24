@@ -1,0 +1,16 @@
+{
+  "name": "integration-node-services",
+  "version": "1.0.0",
+  "description": "Node.js Moleculer services for integration testing with Pylecular",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test-runner.js"
+  },
+  "dependencies": {
+    "moleculer": "^0.14.35",
+    "nats": "^2.29.3"
+  },
+  "author": "",
+  "license": "MIT"
+}

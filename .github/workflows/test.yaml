@@ -1,0 +1,162 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop, "feature/*"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pip install -e .[test]
+
+      - name: Run unit tests
+        run: |
+          pytest tests/unit -v --tb=short
+
+      - name: Run type checking
+        run: |
+          pip install mypy types-setuptools
+          mypy pylecular --ignore-missing-imports || true
+
+      - name: Run linting
+        run: |
+          pip install ruff
+          ruff check pylecular || true
+          ruff format --check pylecular || true
+
+  # integration-tests:
+  #   runs-on: ubuntu-latest
+  #   needs: unit-tests
+
+  #   services:
+  #     nats:
+  #       image: nats:latest
+  #       ports:
+  #         - 4222:4222
+  #         - 6222:6222
+  #         - 8222:8222
+  #       options: >-
+  #         --health-cmd "nc -z localhost 4222"
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 5
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.11"
+
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: "18"
+
+  #     - name: Install Python dependencies
+  #       run: |
+  #         pip install -e .[test]
+
+  #     - name: Install Node.js dependencies
+  #       run: |
+  #         cd tests/integration/node_services
+  #         npm install
+
+  #     - name: Start Node.js Moleculer services
+  #       run: |
+  #         cd tests/integration/node_services
+  #         node index.js &
+  #         echo $! > /tmp/node_services.pid
+  #         sleep 5
+
+  #     - name: Run integration tests
+  #       run: |
+  #         cd tests/integration
+
+  #         echo "Running service discovery test..."
+  #         python test_service_discovery.py
+
+  #         echo "Running basic communication test..."
+  #         python test_basic_communication.py
+
+  #         echo "Running events test..."
+  #         python test_events.py
+
+  #     - name: Stop Node.js services
+  #       if: always()
+  #       run: |
+  #         if [ -f /tmp/node_services.pid ]; then
+  #           kill $(cat /tmp/node_services.pid) || true
+  #         fi
+
+  # integration-tests-docker:
+  #   runs-on: ubuntu-latest
+  #   needs: unit-tests
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.11"
+
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: "18"
+
+  #     - name: Install Python dependencies
+  #       run: |
+  #         pip install -e .[test]
+
+  #     - name: Run integration tests with Docker Compose
+  #       run: |
+  #         cd tests/integration
+  #         python run_integration_tests.py
+
+  test-summary:
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, integration-tests-docker]
+    if: always()
+
+    steps:
+      - name: Test Summary
+        run: |
+          echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.unit-tests.result }}" == "success" ]; then
+            echo "✅ Unit Tests: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Unit Tests: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.integration-tests.result }}" == "success" ]; then
+            echo "✅ Integration Tests (Services): Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Integration Tests (Services): Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.integration-tests-docker.result }}" == "success" ]; then
+            echo "✅ Integration Tests (Docker): Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Integration Tests (Docker): Failed" >> $GITHUB_STEP_SUMMARY
+          fi
