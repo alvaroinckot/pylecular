@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pylecular"
-version = "0.1.13"
+version = "0.1.14"
 description = "Python Moleculer Library"
 authors = [
     { name = "Alvaro Inckot", email = "alvaroinckot@gmail.com" }
@@ -89,7 +89,7 @@ known-first-party = ["pylecular"]
 "__init__.py" = ["F401"]
 "tests/**/*.py" = ["ANN", "PLR2004", "E402"]
 "examples/**/*.py" = ["E402", "ANN", "N806", "F841", "PLR0915"]
-"pylecular/**/*.py" = ["ANN204", "ANN001", "ANN201", "N803"] # Temp: Disable annotations for now
+"pylecular/**/*.py" = ["ANN204", "ANN001", "ANN201", "ANN101", "N803"] # Temp: Disable annotations for now
 
 # Mypy configuration for type checking
 [tool.mypy]

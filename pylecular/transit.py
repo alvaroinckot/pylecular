@@ -301,7 +301,7 @@ class Transit:
                 raise Exception(f"No handler defined for action {action_name}")
 
             result = await endpoint.handler(context)
-            response = {"id": context.id, "data": result, "success": True, "meta": {}}
+            response = {"id": context.id, "data": result, "success": True, "meta": context.meta}
 
         except Exception as e:
             self.logger.error(f"Failed call to {endpoint.name}: {e}")
@@ -313,7 +313,7 @@ class Transit:
                     "stack": traceback.format_exc(),
                 },
                 "success": False,
-                "meta": {},
+                "meta": context.meta,
             }
 
         # Send response back to the caller

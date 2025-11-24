@@ -659,3 +659,194 @@ class TestTransit:
             assert created_node.cpu == 42.0
 
             # Invalid fields should not cause errors (they're filtered out)
+
+    @pytest.mark.asyncio
+    async def test_handle_request_success_includes_metadata(
+        self, mock_dependencies, mock_transporter
+    ):
+        """Regression test: Transit should include context metadata in successful responses."""
+        # Issue: Lines 304 was returning {"meta": {}} instead of {"meta": context.meta}
+        with patch("pylecular.transit.Transporter.get_by_name", return_value=mock_transporter):
+            transit = Transit(**mock_dependencies)
+
+            # Setup mock action endpoint
+            mock_endpoint = MagicMock()
+            mock_endpoint.is_local = True
+            mock_endpoint.handler = AsyncMock(return_value={"result": "success"})
+            mock_endpoint.name = "test.action"
+            mock_endpoint.params_schema = None
+            transit.registry.get_action.return_value = mock_endpoint
+
+            # Create context with metadata
+            mock_context = MagicMock()
+            mock_context.id = "req-123"
+            mock_context.params = {}
+            mock_context.meta = {
+                "user_id": "user-456",
+                "trace_id": "trace-789",
+                "request_ip": "192.168.1.100",
+                "custom_field": "custom_value",
+            }
+            transit.lifecycle.rebuild_context.return_value = mock_context
+
+            packet = Packet(Topic.REQUEST, "other-node", {"action": "test.action", "id": "req-123"})
+            packet.sender = "other-node"
+            await transit._handle_request(packet)
+
+            # Check that response was sent with metadata
+            mock_transporter.publish.assert_called_once()
+            response_packet = mock_transporter.publish.call_args[0][0]
+            assert response_packet.type == Topic.RESPONSE
+            assert response_packet.target == "other-node"
+            assert response_packet.payload["success"] is True
+            assert response_packet.payload["data"] == {"result": "success"}
+
+            # CRITICAL: Verify metadata is included in response (line 304)
+            assert "meta" in response_packet.payload
+            assert response_packet.payload["meta"] == mock_context.meta
+            assert response_packet.payload["meta"]["user_id"] == "user-456"
+            assert response_packet.payload["meta"]["trace_id"] == "trace-789"
+            assert response_packet.payload["meta"]["request_ip"] == "192.168.1.100"
+            assert response_packet.payload["meta"]["custom_field"] == "custom_value"
+
+    @pytest.mark.asyncio
+    async def test_handle_request_error_includes_metadata(
+        self, mock_dependencies, mock_transporter
+    ):
+        """Regression test: Transit should include context metadata in error responses."""
+        # Issue: Line 316 was returning {"meta": {}} instead of {"meta": context.meta}
+        with patch("pylecular.transit.Transporter.get_by_name", return_value=mock_transporter):
+            transit = Transit(**mock_dependencies)
+
+            # Setup mock action endpoint that raises error
+            mock_endpoint = MagicMock()
+            mock_endpoint.is_local = True
+            mock_endpoint.handler = AsyncMock(side_effect=ValueError("Test error"))
+            mock_endpoint.name = "test.action"
+            mock_endpoint.params_schema = None
+            transit.registry.get_action.return_value = mock_endpoint
+
+            # Create context with metadata
+            mock_context = MagicMock()
+            mock_context.id = "req-456"
+            mock_context.params = {}
+            mock_context.meta = {
+                "user_id": "user-789",
+                "trace_id": "trace-abc",
+                "session_id": "session-xyz",
+                "auth_token": "token-123",
+            }
+            transit.lifecycle.rebuild_context.return_value = mock_context
+
+            packet = Packet(Topic.REQUEST, "other-node", {"action": "test.action", "id": "req-456"})
+            packet.sender = "other-node"
+            await transit._handle_request(packet)
+
+            # Check that error response was sent with metadata
+            mock_transporter.publish.assert_called_once()
+            response_packet = mock_transporter.publish.call_args[0][0]
+            assert response_packet.type == Topic.RESPONSE
+            assert response_packet.payload["success"] is False
+            assert "error" in response_packet.payload
+            assert response_packet.payload["error"]["name"] == "ValueError"
+            assert response_packet.payload["error"]["message"] == "Test error"
+
+            # CRITICAL: Verify metadata is included in error response (line 316)
+            assert "meta" in response_packet.payload
+            assert response_packet.payload["meta"] == mock_context.meta
+            assert response_packet.payload["meta"]["user_id"] == "user-789"
+            assert response_packet.payload["meta"]["trace_id"] == "trace-abc"
+            assert response_packet.payload["meta"]["session_id"] == "session-xyz"
+            assert response_packet.payload["meta"]["auth_token"] == "token-123"
+
+    @pytest.mark.asyncio
+    async def test_metadata_propagation_empty_meta(self, mock_dependencies, mock_transporter):
+        """Test that responses handle empty metadata correctly."""
+        with patch("pylecular.transit.Transporter.get_by_name", return_value=mock_transporter):
+            transit = Transit(**mock_dependencies)
+
+            # Setup mock action endpoint
+            mock_endpoint = MagicMock()
+            mock_endpoint.is_local = True
+            mock_endpoint.handler = AsyncMock(return_value={"result": "success"})
+            mock_endpoint.name = "test.action"
+            mock_endpoint.params_schema = None
+            transit.registry.get_action.return_value = mock_endpoint
+
+            # Create context with empty metadata
+            mock_context = MagicMock()
+            mock_context.id = "req-789"
+            mock_context.params = {}
+            mock_context.meta = {}
+            transit.lifecycle.rebuild_context.return_value = mock_context
+
+            packet = Packet(Topic.REQUEST, "other-node", {"action": "test.action", "id": "req-789"})
+            packet.sender = "other-node"
+            await transit._handle_request(packet)
+
+            # Check that response includes empty meta dict
+            mock_transporter.publish.assert_called_once()
+            response_packet = mock_transporter.publish.call_args[0][0]
+            assert response_packet.type == Topic.RESPONSE
+            assert response_packet.payload["success"] is True
+            assert "meta" in response_packet.payload
+            assert response_packet.payload["meta"] == {}
+
+    @pytest.mark.asyncio
+    async def test_metadata_propagation_nested_meta(self, mock_dependencies, mock_transporter):
+        """Test that responses handle nested metadata structures correctly."""
+        with patch("pylecular.transit.Transporter.get_by_name", return_value=mock_transporter):
+            transit = Transit(**mock_dependencies)
+
+            # Setup mock action endpoint
+            mock_endpoint = MagicMock()
+            mock_endpoint.is_local = True
+            mock_endpoint.handler = AsyncMock(return_value={"result": "success"})
+            mock_endpoint.name = "test.action"
+            mock_endpoint.params_schema = None
+            transit.registry.get_action.return_value = mock_endpoint
+
+            # Create context with nested metadata
+            mock_context = MagicMock()
+            mock_context.id = "req-complex"
+            mock_context.params = {}
+            mock_context.meta = {
+                "user": {
+                    "id": "user-123",
+                    "name": "Test User",
+                    "roles": ["admin", "user"],
+                },
+                "request": {
+                    "ip": "192.168.1.100",
+                    "headers": {"user-agent": "TestAgent/1.0"},
+                },
+                "tracing": {
+                    "trace_id": "trace-xyz",
+                    "span_id": "span-abc",
+                    "parent_span_id": "span-parent",
+                },
+            }
+            transit.lifecycle.rebuild_context.return_value = mock_context
+
+            packet = Packet(
+                Topic.REQUEST, "other-node", {"action": "test.action", "id": "req-complex"}
+            )
+            packet.sender = "other-node"
+            await transit._handle_request(packet)
+
+            # Check that response includes complete nested metadata
+            mock_transporter.publish.assert_called_once()
+            response_packet = mock_transporter.publish.call_args[0][0]
+            assert response_packet.type == Topic.RESPONSE
+            assert response_packet.payload["success"] is True
+            assert "meta" in response_packet.payload
+
+            # Verify nested structure is preserved
+            meta = response_packet.payload["meta"]
+            assert meta["user"]["id"] == "user-123"
+            assert meta["user"]["name"] == "Test User"
+            assert "admin" in meta["user"]["roles"]
+            assert meta["request"]["ip"] == "192.168.1.100"
+            assert meta["request"]["headers"]["user-agent"] == "TestAgent/1.0"
+            assert meta["tracing"]["trace_id"] == "trace-xyz"
+            assert meta["tracing"]["span_id"] == "span-abc"
