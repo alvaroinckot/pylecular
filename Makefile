@@ -16,7 +16,7 @@ install:
 	pip install -e .[test]
 	cd tests/integration/node_services && npm install
 
-test: test-unit # test-integration
+test: test-unit
 
 test-unit:
 	pytest tests/unit -v
