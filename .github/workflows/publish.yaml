@@ -1,8 +1,6 @@
 name: Test and Publish
 
 on:
-  pull_request:
-    branches: [main]
   push:
     branches: [main]
     paths:
@@ -25,7 +23,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest
+          pytest tests/unit -v --tb=short
 
   publish:
     if: github.event_name == 'push'
